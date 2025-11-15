@@ -1,0 +1,28 @@
+{
+  "name": "Occult369 - Unlock Your Destiny",
+  "short_name": "Occult369",
+  "description": "Discover the hidden meanings in numbers and unlock the secrets of your personal journey through ancient numerology and astrology.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": ["lifestyle", "entertainment", "productivity"],
+  "icons": [
+    {
+      "src": "/icon512_rounded.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon512_maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

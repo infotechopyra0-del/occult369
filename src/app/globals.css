@@ -1,0 +1,191 @@
+/* Cormorant Garamond - Heading Font */
+@font-face {
+  font-family: 'cormorantgaramond';
+  src: url('https://static.parastorage.com/services/santa-resources/resources/viewer/user-site-fonts/fonts/Cormorant/v1/CormorantGaramond-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'cormorantgaramond';
+  src: url('https://static.parastorage.com/services/santa-resources/resources/viewer/user-site-fonts/fonts/Cormorant/v1/CormorantGaramond-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'cormorantgaramond';
+  src: url('https://static.parastorage.com/services/santa-resources/resources/viewer/user-site-fonts/fonts/Cormorant/v1/CormorantGaramond-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'cormorantgaramond';
+  src: url('https://static.parastorage.com/services/santa-resources/resources/viewer/user-site-fonts/fonts/Cormorant/v1/CormorantGaramond-BoldItalic.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Sora - Paragraph Font */
+@font-face {
+  font-family: 'sora';
+  src: url('https://fonts.gstatic.com/s/sora/v11/xMQOuFFYT72X5wkB_18qmnndmSdSn3-KIwNhBti0.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'sora';
+  src: url('https://fonts.gstatic.com/s/sora/v11/xMQOuFFYT72X5wkB_18qmnndmSdnn3-KIwNhBg.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'sora';
+  src: url('https://fonts.gstatic.com/s/sora/v11/xMQOuFFYT72X5wkB_18qmnndmSfSn3-KIwNhBti0.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'sora';
+  src: url('https://fonts.gstatic.com/s/sora/v11/xMQOuFFYT72X5wkB_18qmnndmSfnn3-KIwNhBg.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@import "tailwindcss";
+
+@theme {
+  /* Custom Occult369 Theme Colors */
+  --color-light-purple: #A020F0;
+  --color-dark-purple: #6b21a8;
+  --color-cosmic-blue: #3b82f6;
+  --color-mystical-gold: #fbbf24;
+  
+  /* Font Families */
+  --font-heading: Georgia, serif;
+  --font-paragraph: system-ui, sans-serif;
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  
+  /* Occult369 Theme - Deep Purple/Mystic Colors */
+  --primary: 261 50% 25%; /* Deep mystical purple */
+  --primary-foreground: 0 0% 98%;
+  --secondary: 280 85% 70%; /* Bright purple/pink for accents */
+  --secondary-foreground: 261 50% 15%;
+  
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 261 50% 25%;
+  --radius: 0.5rem;
+  
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+  
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 261 50% 25%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 240 5.9% 90%;
+  --sidebar-ring: 261 50% 25%;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  
+  /* Occult369 Dark Theme */
+  --primary: 261 50% 15%; /* Darker mystical purple */
+  --primary-foreground: 0 0% 98%;
+  --secondary: 280 85% 70%; /* Bright purple accent */
+  --secondary-foreground: 240 10% 3.9%;
+  
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 280 85% 70%;
+  
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+  
+  --sidebar: 240 5.9% 10%;
+  --sidebar-foreground: 240 4.8% 95.9%;
+  --sidebar-primary: 280 85% 70%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 280 85% 70%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
+
+p {
+  font-family: var(--font-paragraph);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
