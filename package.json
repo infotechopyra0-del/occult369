@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "create-admin": "node scripts/createAdmin.js",
+    "create-admin": "node scripts/create-admin.js",
     "seed-services": "node scripts/seedServices.js"
   },
   "dependencies": {

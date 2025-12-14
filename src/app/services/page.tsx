@@ -7,22 +7,40 @@ import { Star, Clock, Users, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { BaseCrudService } from '@/integrations';
-import { Services } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
+
+interface Service {
+  _id: string;
+  serviceName: string;
+  shortDescription: string;
+  longDescription?: string;
+  price: number;
+  duration?: string;
+  serviceImage?: string;
+  serviceType?: string;
+  category?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export default function ServicesPage() {
   const router = useRouter();
-  const [services, setServices] = useState<Services[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const { items } = await BaseCrudService.getAll<Services>('services');
-        setServices(items);
+        const response = await fetch('/api/admin/services');
+        if (!response.ok) {
+          throw new Error('Failed to fetch services');
+        }
+        const data = await response.json();
+        setServices(data.services || []);
       } catch (error) {
         console.error('Error fetching services:', error);
+        setServices([]);
       } finally {
         setLoading(false);
       }
@@ -30,7 +48,7 @@ export default function ServicesPage() {
     fetchServices();
   }, []);
 
-  const handleBookService = (service: Services) => {
+  const handleBookService = (service: Service) => {
     // Redirect to checkout page with service ID
     router.push(`/services/checkout?serviceId=${service._id}`);
   };
