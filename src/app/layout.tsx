@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import Providers from "@/components/Providers";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,6 +56,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <WhatsAppWidget />
+          <Toaster position="top-right" richColors />
         </Providers>
       </body>
     </html>

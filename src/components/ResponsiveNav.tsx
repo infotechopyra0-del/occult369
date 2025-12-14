@@ -48,9 +48,9 @@ export default function ResponsiveNav({ currentPage = '' }: ResponsiveNavProps) 
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#301934]/95 backdrop-blur-md border-b border-[#B8860B]/30 shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-[9999] bg-[#301934]/95 backdrop-blur-md border-b border-[#B8860B]/30 shadow-lg transform-gpu will-change-transform">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center py-3 md:py-4 px-4 sm:px-6" style={{ minHeight: '64px' }}>
+        <div className="flex justify-between items-center py-3 md:py-4 px-4 sm:px-6 relative" style={{ minHeight: '64px', contain: 'layout' }}>
           <Link href="/" className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <motion.div
               whileHover={{ scale: 1.05 }}

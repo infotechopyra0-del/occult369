@@ -95,7 +95,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="w-full bg-[#f5f1e8]">
+      <div className="w-full h-screen bg-[#f5f1e8] overflow-hidden flex flex-col">
         {/* Header with Purple Gradient */}
         <div className="bg-gradient-to-r from-[#301934] to-purple-700 px-6 lg:px-8 py-6 flex justify-between items-center">
           <div>
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="p-4 md:p-6 lg:p-8 space-y-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 space-y-6 admin-contacts-scroll">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 min-[640px]:grid-cols-2 xl:grid-cols-4 gap-4 w-full">
             {statCards.map((stat, index) => (

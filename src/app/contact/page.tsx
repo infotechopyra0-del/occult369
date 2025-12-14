@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MapPin, Phone, Mail, Clock, MessageCircle, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import ResponsiveNav from '@/components/ResponsiveNav';
 
 export default function ContactPage() {
@@ -31,46 +32,21 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setResult("Sending your message...");
     
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("access_key", "0a5155ff-51aa-4945-b7d8-b69123baeecd");
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("phone", formData.phone);
-      formDataToSend.append("service", formData.service);
-      formDataToSend.append("preferredContact", formData.preferredContact);
-      formDataToSend.append("message", formData.message);
-      formDataToSend.append("subject", "New Numerology Consultation Request from Occult369");
-      
-      // Add additional data for better email formatting
-      const formattedMessage = `
-New Numerology Consultation Request
-
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
-Service Interest: ${formData.service}
-Preferred Contact Method: ${formData.preferredContact}
-
-Message:
-${formData.message}
-
----
-Submitted via Occult369 Contact Form
-      `;
-      formDataToSend.append("message", formattedMessage);
-
-      const response = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        body: formDataToSend
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
       
-      if (data.success) {
-        setResult("✨ Thank you! Your message has been sent successfully. We'll contact you soon through your preferred method.");
+      if (response.ok && data.success) {
+        toast.success('✨ Message sent successfully! We will contact you soon through your preferred method.');
+        
         // Reset form
         setFormData({
           name: '',
@@ -81,6 +57,8 @@ Submitted via Occult369 Contact Form
           preferredContact: ''
         });
         
+        setResult("✨ Thank you! Your message has been sent successfully. We'll contact you soon through your preferred method.");
+        
         // Also send WhatsApp notification for immediate response option
         setTimeout(() => {
           setResult(prev => prev + " 💬 You can also contact us instantly via WhatsApp for immediate assistance!");
@@ -88,10 +66,12 @@ Submitted via Occult369 Contact Form
         
       } else {
         console.error("Form submission error:", data);
+        toast.error(data.error || '❌ There was an error sending your message. Please try again or contact us directly via WhatsApp.');
         setResult("❌ There was an error sending your message. Please try again or contact us directly via WhatsApp.");
       }
     } catch (error) {
       console.error("Network error:", error);
+      toast.error('❌ Network error. Please check your connection and try again.');
       setResult("❌ Network error. Please check your connection and try again, or contact us via WhatsApp.");
     } finally {
       setIsSubmitting(false);
@@ -111,7 +91,7 @@ Submitted via Occult369 Contact Form
   };
 
   return (
-  <div className="min-h-screen overflow-x-hidden" style={{backgroundColor: '#F5F5DC'}}>
+  <div className="min-h-screen overflow-x-hidden relative isolate" style={{backgroundColor: '#F5F5DC', scrollbarGutter: 'stable'}}>
       {/* Responsive Header */}
       <ResponsiveNav currentPage="contact" />
 
@@ -209,7 +189,7 @@ Submitted via Occult369 Contact Form
       </section>
 
       {/* Contact Form & Info */}
-      <section className="py-12 sm:py-16 lg:py-24 px-4 sm:px-6 bg-[#301934]/5">
+      <section className="py-12 sm:py-16 lg:py-24 px-4 sm:px-6 bg-[#301934]/5 relative contain-layout">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16">
             {/* Contact Form */}
@@ -228,7 +208,7 @@ Submitted via Occult369 Contact Form
                     Fill out this form and we&apos;ll connect with you through your preferred method to discuss your numerological needs.
                   </p>
 
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form onSubmit={handleSubmit} className="space-y-6 isolate relative">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="name" className="font-paragraph">Full Name *</Label>
@@ -270,10 +250,10 @@ Submitted via Occult369 Contact Form
                       <div>
                         <Label htmlFor="preferredContact" className="font-paragraph">Preferred Contact Method</Label>
                         <Select value={formData.preferredContact} onValueChange={(value: string) => handleInputChange('preferredContact', value)}>
-                          <SelectTrigger className="mt-2">
+                          <SelectTrigger className="mt-2 relative">
                             <SelectValue placeholder="Choose your preference" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[100] bg-[#F5F5DC] border border-[#B8860B]/20 shadow-xl" sideOffset={5} avoidCollisions={false} position="popper">
                             <SelectItem value="whatsapp">WhatsApp</SelectItem>
                             <SelectItem value="phone">Phone Call</SelectItem>
                             <SelectItem value="email">Email</SelectItem>
@@ -282,15 +262,13 @@ Submitted via Occult369 Contact Form
                         </Select>
                       </div>
                     </div>
-
                     <div>
                       <Label htmlFor="service" className="font-paragraph">Service Interest</Label>
                       <Select value={formData.service} onValueChange={(value: string) => handleInputChange('service', value)}>
-                        <SelectTrigger className="mt-2">
+                        <SelectTrigger className="mt-2 relative">
                           <SelectValue placeholder="Select a service" />
                         </SelectTrigger>
-                        <SelectContent>
-                            
+                          <SelectContent className='z-[100] bg-[#F5F5DC] border border-[#B8860B]/20 shadow-xl' sideOffset={5} avoidCollisions={false} position="popper">
                           <SelectItem value="life-path">Life Path Reading</SelectItem>
                           <SelectItem value="numerology-chart">Complete Numerology Chart</SelectItem>
                           <SelectItem value="compatibility">Relationship Compatibility</SelectItem>
@@ -440,7 +418,7 @@ Submitted via Occult369 Contact Form
                     <div>
                       <h4 className="font-heading font-semibold text-[#301934] mb-1">WhatsApp Support</h4>
                       <p className="font-paragraph text-[#301934]/80">
-+91 6390 057 777
+                        +91 6390 057 777
                         <br />
                         Instant responses & booking
                       </p>

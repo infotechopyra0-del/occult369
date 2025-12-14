@@ -70,6 +70,57 @@
 
 @import "tailwindcss";
 
+/* Prevent scrollbar disappearance on modal/dropdown open */
+html {
+  overflow-y: scroll !important;
+  scrollbar-gutter: stable;
+  width: 100vw;
+}
+
+body {
+  overflow-y: scroll !important;
+  scrollbar-gutter: stable;
+  width: 100%;
+}
+
+/* Prevent layout shifts when dropdowns open */
+*[data-radix-popper-content-wrapper] {
+  z-index: 100 !important;
+}
+
+/* Prevent Select dropdown from causing scrollbar changes */
+[data-radix-select-content] {
+  position: fixed !important;
+  z-index: 100 !important;
+}
+
+/* Additional dropdown stability */
+[data-radix-select-viewport] {
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+}
+
+/* Ensure select triggers don't cause layout shifts */
+[data-radix-select-trigger] {
+  position: relative !important;
+}
+
+/* Hide scrollbars in admin contacts page */
+.admin-contacts-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-contacts-scroll {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Ensure Select dropdowns don't affect body scroll */
+[data-radix-select-content] {
+  z-index: 100 !important;
+}
+
 @theme {
   /* Custom Occult369 Theme Colors */
   --color-light-purple: #A020F0;

@@ -4,9 +4,10 @@ export interface IContact extends Document {
   name: string;
   email: string;
   phone?: string;
-  subject: string;
+  preferredContact?: string;
+  service?: string;
   message: string;
-  status: 'pending' | 'replied' | 'closed';
+  status: 'new' | 'contacted' | 'resolved';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,14 +31,24 @@ const contactSchema = new Schema<IContact>(
     phone: {
       type: String,
       trim: true,
-      match: [/^[0-9]{10,15}$/, 'Please enter a valid phone number'],
+      maxlength: [20, 'Phone number must be less than 20 characters'],
     },
-    subject: {
+    preferredContact: {
       type: String,
-      required: [true, 'Subject is required'],
-      trim: true,
-      minlength: [3, 'Subject must be at least 3 characters long'],
-      maxlength: [200, 'Subject must be less than 200 characters'],
+      enum: ['whatsapp', 'phone', 'email', 'video'],
+      default: 'email',
+    },
+    service: {
+      type: String,
+      enum: [
+        'life-path', 
+        'numerology-chart', 
+        'compatibility', 
+        'career-guidance', 
+        'name-analysis', 
+        'yearly-forecast', 
+        'consultation'
+      ],
     },
     message: {
       type: String,
@@ -48,8 +59,8 @@ const contactSchema = new Schema<IContact>(
     },
     status: {
       type: String,
-      enum: ['pending', 'replied', 'closed'],
-      default: 'pending',
+      enum: ['new', 'contacted', 'resolved'],
+      default: 'new',
     },
   },
   {
