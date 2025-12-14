@@ -189,3 +189,14 @@ p {
 .text-balance {
   text-wrap: balance;
 }
+
+/* Fix dropdown menu positioning to prevent navbar movement */
+[data-radix-popper-content-wrapper] {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+/* Prevent layout shift when dropdown opens */
+nav {
+  contain: layout style !important;
+}

@@ -9,32 +9,100 @@ import { useEffect, useState } from 'react';
 import { BaseCrudService } from '@/integrations';
 import { Services, Testimonials } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
+import { toast } from 'sonner';
 
 export default function HomePage() {
   const [services, setServices] = useState<Services[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonials[]>([]);
   const [result, setResult] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    birthDate: '',
+    whatsappNumber: ''
+  });
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 300], [0, -50]);
   const y2 = useTransform(scrollY, [0, 300], [0, 25]);
 
+  // Form input change handler
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsSubmitting(true);
     setResult("Sending....");
-    const formData = new FormData(event.currentTarget);
-    formData.append("access_key", "0a5155ff-51aa-4945-b7d8-b69123baeecd");
+    
+    try {
+      // Validate birth date
+      if (!formData.birthDate) {
+        toast.error('Birth date is required');
+        return;
+      }
 
-    const response = await fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      body: formData
-    });
+      // Parse birth date
+      const birthDateObj = new Date(formData.birthDate);
+      const submitData = {
+        firstName: formData.firstName.trim(),
+        name: formData.firstName.trim(), // Using firstName as name for compatibility
+        birthDate: {
+          day: birthDateObj.getDate(),
+          month: birthDateObj.getMonth() + 1,
+          year: birthDateObj.getFullYear()
+        },
+        whatsappNumber: formData.whatsappNumber.trim()
+      };
 
-    const data = await response.json();
-    if (data.success) {
-      setResult("Form Submitted Successfully! We'll send your sample report soon.");
-      event.currentTarget.reset();
-    } else {
-      setResult("Error submitting form. Please try again.");
+      // Save to database
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submitData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Sample Report Request Sent Successfully!');
+        setResult('Sample Report Request Sent Successfully!');
+        // Reset form
+        setFormData({
+          firstName: '',
+          birthDate: '',
+          whatsappNumber: ''
+        });
+        
+        // Also send to web3forms for email notification
+        const formDataForEmail = new FormData();
+        formDataForEmail.append('access_key', '0a5155ff-51aa-4945-b7d8-b69123baeecd');
+        formDataForEmail.append('name', submitData.firstName);
+        formDataForEmail.append('birth_date', formData.birthDate);
+        formDataForEmail.append('whatsapp', submitData.whatsappNumber);
+        formDataForEmail.append('subject', 'Free Sample Numerology Report Request');
+        
+        await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          body: formDataForEmail
+        });
+        
+      } else {
+        toast.error(data.error || 'Failed to submit report request');
+        setResult('Error: ' + (data.error || 'Failed to submit report request'));
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('Failed to submit report request. Please try again.');
+      setResult('Error: Failed to submit report request');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -476,19 +544,25 @@ export default function HomePage() {
                         <label className="block text-sm font-medium text-[#301934] mb-2">First Name</label>
                         <input 
                           type="text" 
-                          name="name"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
                           placeholder="Enter your name"
                           required
-                          className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50"
+                          disabled={isSubmitting}
+                          className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-[#301934] mb-2">Birth Date</label>
                         <input 
                           type="date" 
-                          name="birth_date"
+                          name="birthDate"
+                          value={formData.birthDate}
+                          onChange={handleInputChange}
                           required
-                          className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50"
+                          disabled={isSubmitting}
+                          className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
                         />
                       </div>
                     </div>
@@ -496,15 +570,28 @@ export default function HomePage() {
                       <label className="block text-sm font-medium text-[#301934] mb-2">WhatsApp Number</label>
                       <input 
                         type="tel" 
-                        name="whatsapp"
+                        name="whatsappNumber"
+                        value={formData.whatsappNumber}
+                        onChange={handleInputChange}
                         placeholder="+91 XXXXX XXXXX"
                         required
-                        className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50"
+                        disabled={isSubmitting}
+                        className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
                       />
                     </div>
-                    <input type="hidden" name="subject" value="Free Sample Numerology Report Request" />
-                    <Button type="submit" className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 py-3">
-                      📱 Send My Sample Report
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 py-3 disabled:opacity-50"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#301934] mr-2"></div>
+                          Submitting...
+                        </>
+                      ) : (
+                        '📱 Send My Sample Report'
+                      )}
                     </Button>
                     {result && (
                       <p className={`text-center text-sm ${result.includes('Success') ? 'text-green-600' : 'text-red-600'}`}>
@@ -581,7 +668,7 @@ export default function HomePage() {
                       Get the full 25+ page detailed analysis with personalized insights, predictions, and guidance.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Link href="/book-reading" className="flex-1">
+                      <Link href="/services" className="flex-1">
                         <Button className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90">
                           📞 Book Full Reading
                         </Button>
@@ -1093,7 +1180,7 @@ export default function HomePage() {
                 Get personalized guidance from our master practitioners and unlock the secrets of your numerological destiny.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/contact">
+                <Link href="/services">
                   <Button size="lg" className="bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 px-8">
                     🌟 Book Your Reading
                   </Button>
@@ -1229,7 +1316,7 @@ export default function HomePage() {
               Begin your journey of self-discovery with a personalized numerology reading today. The universe is calling you to step into your power.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/contact">
+              <Link href="/services">
                 <Button size="lg" className="bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90">
                   Book Your Reading
                 </Button>
@@ -1280,7 +1367,6 @@ export default function HomePage() {
                 <Link href="/services" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200">Our Services</Link>
                 <Link href="/testimonials" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200">Testimonials</Link>
                 <Link href="/learn-more" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200">Learn More</Link>
-                <Link href="/book-reading" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200">Book Reading</Link>
               </div>
             </div>
 

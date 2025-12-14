@@ -5,12 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Image } from '@/components/ui/image';
 import { Star, Clock, Users, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { BaseCrudService } from '@/integrations';
 import { Services } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
 
 export default function ServicesPage() {
+  const router = useRouter();
   const [services, setServices] = useState<Services[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,14 +31,8 @@ export default function ServicesPage() {
   }, []);
 
   const handleBookService = (service: Services) => {
-    if (service.bookingLink) {
-      window.open(service.bookingLink, '_blank');
-    } else {
-      // Fallback to WhatsApp
-      const message = `Hi! I'm interested in booking a ${service.serviceName} reading. Could you please provide more information?`;
-      const whatsappUrl = `https://wa.me/916390057777?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
-    }
+    // Redirect to checkout page with service ID
+    router.push(`/services/checkout?serviceId=${service._id}`);
   };
 
   const handleWhatsAppContact = () => {
@@ -129,7 +125,7 @@ export default function ServicesPage() {
                           className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90"
                           onClick={() => handleBookService(service)}
                         >
-                          Book This Reading
+                          Buy Now
                         </Button>
                       </div>
                     </CardContent>
@@ -356,9 +352,11 @@ export default function ServicesPage() {
               Choose the reading that calls to your soul and take the first step toward unlocking your cosmic potential.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90" onClick={handleWhatsAppContact}>
+              <Link href="/services">
+              <Button size="lg" className="bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90">
                 Book Your Reading Now
               </Button>
+              </Link>
               <Button size="lg" variant="outline" className="border-[#B8860B] text-[#B8860B] hover:bg-[#B8860B] hover:text-[#301934]" onClick={handleWhatsAppContact}>
                 Chat on WhatsApp
               </Button>
