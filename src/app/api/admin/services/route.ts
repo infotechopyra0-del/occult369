@@ -1,21 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Service from '@/models/Service';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
 // GET - Fetch all services
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
-    // In production, add proper authentication check
-    // const session = await getServerSession();
-    // if (!session?.user || session.user.role !== 'admin') {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
     await connectToDatabase();
     const services = await Service.find().sort({ createdAt: -1 });
-
     return NextResponse.json({ 
       services,
       total: services.length,

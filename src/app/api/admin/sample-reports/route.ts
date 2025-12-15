@@ -5,33 +5,22 @@ import dbConnect from '@/lib/mongodb';
 import SampleReport from '@/models/SampleReport';
 
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     await dbConnect();
-
     const sampleReports = await SampleReport.find()
       .sort({ createdAt: -1 })
       .lean();
-
     return NextResponse.json({
       success: true,
       sampleReports
     });
-
   } catch (error) {
     console.error('Error fetching sample reports:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch sample reports' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch sample reports' }, { status: 500 });
   }
 }
 

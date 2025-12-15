@@ -9,26 +9,18 @@ import Service from '@/models/Service';
 import Contact from '@/models/Contact';
 
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     await dbConnect();
-
     // Get current date for today's calculations
     const today = new Date();
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-    
     // Get start of current month
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    
     // Get last 7 days for revenue chart
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
@@ -36,7 +28,6 @@ export async function GET() {
       date.setDate(date.getDate() - i);
       last7Days.push(new Date(date.getFullYear(), date.getMonth(), date.getDate()));
     }
-
     // Parallel database queries for better performance
     const [
       totalUsers,
@@ -142,7 +133,6 @@ export async function GET() {
     // Get recent orders for activity feed
     const recentOrders = await Order.find()
       .populate('userId', 'name email')
-      .populate('serviceId', 'serviceName price')
       .sort({ createdAt: -1 })
       .limit(5)
       .lean();
@@ -153,6 +143,9 @@ export async function GET() {
       .limit(3)
       .lean();
 
+    // Debug log for troubleshooting
+    // eslint-disable-next-line no-console
+    console.log('DEBUG: totalUsers =', totalUsers, 'DB =', (await dbConnect()).connection.name);
     return NextResponse.json({
       success: true,
       stats: {

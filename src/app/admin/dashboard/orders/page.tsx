@@ -25,6 +25,7 @@ import {
   Package,
   TrendingUp
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import AdminLayout from '@/components/AdminLayout';
 import { motion } from 'framer-motion';
 
@@ -58,6 +59,20 @@ interface Order {
 }
 
 export default function OrdersPage() {
+  // Modal state
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  const handleView = (order: Order) => {
+    setSelectedOrder(order);
+    setViewModalOpen(true);
+  };
+
+  const handleEdit = (order: Order) => {
+    setSelectedOrder(order);
+    setEditModalOpen(true);
+  };
   const { data: session, status } = useSession();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -282,10 +297,10 @@ export default function OrdersPage() {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => handleView(order)}>
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                            <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => handleEdit(order)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </div>
@@ -306,6 +321,53 @@ export default function OrdersPage() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
+    {/* View Order Modal */}
+    <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Order Details</DialogTitle>
+        </DialogHeader>
+        {selectedOrder && (
+          <div className="space-y-2">
+            <div><b>Order ID:</b> {selectedOrder.orderId}</div>
+            <div><b>Service:</b> {selectedOrder.serviceName} ({selectedOrder.serviceType})</div>
+            <div><b>Price:</b> ₹{selectedOrder.price}</div>
+            <div><b>Status:</b> {selectedOrder.paymentStatus}</div>
+            <div><b>Contact:</b> {selectedOrder.contactDetails?.name} ({selectedOrder.contactDetails?.email}, {selectedOrder.contactDetails?.phone})</div>
+            <div><b>Created:</b> {new Date(selectedOrder.createdAt).toLocaleString()}</div>
+            <div><b>Admin Notes:</b> {selectedOrder.adminNotes || 'N/A'}</div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button onClick={() => setViewModalOpen(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Edit Order Modal */}
+    <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Order</DialogTitle>
+        </DialogHeader>
+        {selectedOrder && (
+          <div className="space-y-2">
+            <div><b>Order ID:</b> {selectedOrder.orderId}</div>
+            {/* Add form fields for editing as needed */}
+            <div><b>Admin Notes:</b>
+              <Input
+                value={selectedOrder.adminNotes || ''}
+                onChange={e => setSelectedOrder({ ...selectedOrder, adminNotes: e.target.value })}
+              />
+            </div>
+          </div>
+        )}
+        <DialogFooter>
+          <Button onClick={() => setEditModalOpen(false)}>Cancel</Button>
+          {/* Add save logic here */}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </AdminLayout>
   );
 }

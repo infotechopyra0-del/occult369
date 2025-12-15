@@ -1,4 +1,16 @@
+
 "use client"
+// Defensive helper for safe toLocaleString
+function safeLocaleString(val: unknown): string {
+  if (typeof val === 'number' && Number.isFinite(val)) {
+    try {
+      return val.toLocaleString('en-IN');
+    } catch {
+      return val.toString();
+    }
+  }
+  return '0';
+}
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -64,10 +76,11 @@ interface RecentOrder {
     name: string;
     email: string;
   };
-  serviceId: {
+  serviceId?: {
     serviceName: string;
     price: number;
   };
+  serviceName?: string;
   totalAmount: number;
   createdAt: string;
 }
@@ -162,7 +175,7 @@ export default function AdminDashboard() {
         beginAtZero: true,
         ticks: {
           callback: function(value: any) {
-            return '₹' + value.toLocaleString('en-IN');
+            return '₹' + safeLocaleString(value);
           }
         }
       }
@@ -172,7 +185,12 @@ export default function AdminDashboard() {
   const revenueChartData = {
     labels: revenueData.map(item => {
       const date = new Date(item.date);
-      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      if (isNaN(date.getTime())) return '';
+      try {
+        return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      } catch {
+        return '';
+      }
     }),
     datasets: [
       {
@@ -188,7 +206,12 @@ export default function AdminDashboard() {
   const ordersChartData = {
     labels: revenueData.map(item => {
       const date = new Date(item.date);
-      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      if (isNaN(date.getTime())) return '';
+      try {
+        return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      } catch {
+        return '';
+      }
     }),
     datasets: [
       {
@@ -249,8 +272,8 @@ export default function AdminDashboard() {
     },
     {
       title: 'Total Revenue',
-      value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`,
-      todayValue: `₹${stats.todayRevenue.toLocaleString('en-IN')}`,
+      value: `₹${safeLocaleString(stats.totalRevenue)}`,
+      todayValue: `₹${safeLocaleString(stats.todayRevenue)}`,
       icon: DollarSign,
       color: 'bg-yellow-500',
       bgColor: 'bg-yellow-50',
@@ -430,7 +453,7 @@ export default function AdminDashboard() {
                                   {order.userId.name}
                                 </p>
                                 <p className="text-sm text-gray-600 font-sora">
-                                  {order.serviceId.serviceName}
+                                  {order.serviceId?.serviceName || order.serviceName}
                                 </p>
                                 <p className="text-xs text-gray-500 font-sora">
                                   {formatDate(order.createdAt)}
@@ -438,7 +461,7 @@ export default function AdminDashboard() {
                               </div>
                               <div className="text-right">
                                 <p className="text-lg font-bold text-[#B8860B] font-heading">
-                                  ₹{order.totalAmount.toLocaleString('en-IN')}
+                                  ₹{safeLocaleString(order.totalAmount)}
                                 </p>
                               </div>
                             </div>

@@ -7,6 +7,7 @@ import { Star, Clock, Users, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import ResponsiveNav from '@/components/ResponsiveNav';
 
 interface Service {
@@ -24,19 +25,32 @@ interface Service {
   updatedAt?: string;
 }
 
+function safeLocaleString(val: unknown): string {
+  if (typeof val === 'number' && Number.isFinite(val)) {
+    try {
+      return val.toLocaleString('en-IN');
+    } catch {
+      return val.toString();
+    }
+  }
+  return '0';
+}
+
 export default function ServicesPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('/api/admin/services');
+        const response = await fetch('/api/services');
         if (!response.ok) {
           throw new Error('Failed to fetch services');
         }
         const data = await response.json();
+        console.log('DEBUG: /services fetched services:', data.services);
         setServices(data.services || []);
       } catch (error) {
         console.error('Error fetching services:', error);
@@ -49,8 +63,16 @@ export default function ServicesPage() {
   }, []);
 
   const handleBookService = (service: Service) => {
-    // Redirect to checkout page with service ID
-    router.push(`/services/checkout?serviceId=${service._id}`);
+    console.log('DEBUG: handleBookService called with service:', service);
+    if (status === 'unauthenticated') {
+      const url = '/login?callbackUrl=' + encodeURIComponent(`/services/checkout?serviceId=${service._id}`);
+      console.log('DEBUG: Unauthenticated, redirecting to', url);
+      router.push(url);
+      return;
+    }
+    const checkoutUrl = `/services/checkout?serviceId=${service._id}`;
+    console.log('DEBUG: Authenticated, redirecting to', checkoutUrl);
+    router.push(checkoutUrl);
   };
 
   const handleWhatsAppContact = () => {
@@ -65,7 +87,7 @@ export default function ServicesPage() {
       <ResponsiveNav currentPage="services" />
 
       {/* Hero Section */}
-  <section className="pt-24 sm:pt-28 lg:pt-36 pb-16 px-6 bg-gradient-to-br from-[#301934] via-[#301934]/90 to-[#A020F0]">
+      <section className="pt-24 sm:pt-28 lg:pt-36 pb-16 px-6 bg-gradient-to-br from-[#301934] via-[#301934]/90 to-[#A020F0]">
         <div className="max-w-7xl mx-auto text-center">
           <motion.h1 
             className="text-5xl md:text-7xl font-heading font-bold text-[#F5F5DC] mb-6"
@@ -132,7 +154,7 @@ export default function ServicesPage() {
                         )}
                         <div className="flex items-center justify-between mb-6">
                           <div className="text-3xl font-heading font-bold text-[#B8860B]">
-                            ₹{service.price.toLocaleString('en-IN')}
+                            ₹{safeLocaleString(service.price)}
                           </div>
                           <div className="flex items-center text-[#B8860B]">
                             <Clock className="w-4 h-4 mr-1" />

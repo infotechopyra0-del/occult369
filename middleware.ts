@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import dbConnect from './src/lib/mongodb';
+import User from './src/models/User';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,13 +17,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // Protect admin routes - only allow users with admin role
+  // Protect admin routes - require authentication and admin role
   if (pathname.startsWith('/admin')) {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    
-    if (token.role !== 'admin') {
+    // Fetch user from DB and check role
+    await dbConnect();
+    const user = await User.findOne({ email: token.email });
+    if (!user || user.role !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }

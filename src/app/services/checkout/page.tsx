@@ -1,4 +1,15 @@
 'use client';
+// Defensive helper for safe toLocaleString
+function safeLocaleString(val: unknown): string {
+  if (typeof val === 'number' && Number.isFinite(val)) {
+    try {
+      return val.toLocaleString('en-IN');
+    } catch {
+      return val.toString();
+    }
+  }
+  return '0';
+}
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -62,6 +73,7 @@ const CheckoutPageContent = () => {
   const [errors, setErrors] = useState<Partial<CheckoutFormData>>({});
 
   const serviceId = searchParams.get('serviceId');
+  console.log('DEBUG: /services/checkout serviceId from searchParams =', serviceId);
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -73,6 +85,7 @@ const CheckoutPageContent = () => {
   // Fetch service details
   useEffect(() => {
     if (!serviceId) {
+      console.log('DEBUG: No serviceId found in searchParams, redirecting to /services');
       router.push('/services');
       return;
     }
@@ -80,11 +93,15 @@ const CheckoutPageContent = () => {
     const fetchService = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/services/${serviceId}`);
+        console.log('DEBUG: /services/checkout fetching serviceId =', serviceId);
+        const fetchUrl = `/api/services/${serviceId}`;
+        console.log('DEBUG: Fetching service from', fetchUrl);
+        const response = await fetch(fetchUrl);
         if (!response.ok) {
           throw new Error('Service not found');
         }
         const data = await response.json();
+        console.log('DEBUG: /services/checkout fetched service:', data.service);
         setService(data.service); // Extract service from API response
       } catch (error) {
         console.error('Error fetching service:', error);
@@ -183,7 +200,8 @@ const CheckoutPageContent = () => {
           name: formData.name.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
-          serviceId: serviceId
+          serviceId: serviceId,
+          amount: service.price // Send the actual price to backend
         })
       });
 
@@ -452,7 +470,7 @@ const CheckoutPageContent = () => {
                     <div className="space-y-2">
                       <div className="flex justify-between text-[#301934]">
                         <span>Service Price</span>
-                        <span>₹{service?.price?.toLocaleString('en-IN') || '0'}</span>
+                        <span>₹{safeLocaleString(service?.price)}</span>
                       </div>
                       <div className="flex justify-between text-[#301934]/70 text-sm">
                         <span>Taxes & Fees</span>
@@ -464,7 +482,7 @@ const CheckoutPageContent = () => {
 
                     <div className="flex justify-between text-lg font-bold text-[#301934]">
                       <span>Total Amount</span>
-                      <span>₹{service?.price?.toLocaleString('en-IN') || '0'}</span>
+                      <span>₹{safeLocaleString(service?.price)}</span>
                     </div>
 
                     {/* Payment Button */}

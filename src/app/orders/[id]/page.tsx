@@ -164,13 +164,9 @@ export default function OrderDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{backgroundColor: '#F5F5DC'}}>
-      {/* Cosmic Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#301934] via-[#301934]/90 to-[#A020F0]" />
-      
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-[#301934] via-[#301934]/90 to-[#A020F0]">
       {/* Responsive Navigation */}
       <ResponsiveNav currentPage="orders" />
-      
       <div className="relative z-10 pt-20 pb-8">
         <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
@@ -178,7 +174,7 @@ export default function OrderDetailsPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8"
+          className="my-8"
         >
           <div className="flex items-center space-x-4 mb-6">
             <Button
@@ -360,109 +356,10 @@ export default function OrderDetailsPage() {
               </Card>
             </motion.div>
 
-            {/* Booking Details */}
-            {order.bookingDetails && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                <Card className="bg-purple-900/30 border-purple-700/30 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-5 w-5 text-yellow-400" />
-                      <CardTitle className="text-white">Booking Details</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {order.bookingDetails.date && (
-                        <div className="space-y-2">
-                          <label className="text-sm text-purple-300">Preferred Date</label>
-                          <div className="text-white">{order.bookingDetails.date}</div>
-                        </div>
-                      )}
-                      {order.bookingDetails.time && (
-                        <div className="space-y-2">
-                          <label className="text-sm text-purple-300">Preferred Time</label>
-                          <div className="text-white">{order.bookingDetails.time}</div>
-                        </div>
-                      )}
-                      {order.bookingDetails.timelineSelected && (
-                        <div className="space-y-2">
-                          <label className="text-sm text-purple-300">Timeline Selected</label>
-                          <div className="text-white">{order.bookingDetails.timelineSelected}</div>
-                        </div>
-                      )}
-                    </div>
 
-                    {(order.bookingDetails.birthDate || order.bookingDetails.birthTime || order.bookingDetails.birthPlace) && (
-                      <>
-                        <Separator className="bg-purple-700/30" />
-                        <div className="space-y-4">
-                          <h4 className="text-white font-medium">Birth Information</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {order.bookingDetails.birthDate && (
-                              <div className="space-y-2">
-                                <label className="text-sm text-purple-300">Birth Date</label>
-                                <div className="text-white">{order.bookingDetails.birthDate}</div>
-                              </div>
-                            )}
-                            {order.bookingDetails.birthTime && (
-                              <div className="space-y-2">
-                                <label className="text-sm text-purple-300">Birth Time</label>
-                                <div className="text-white">{order.bookingDetails.birthTime}</div>
-                              </div>
-                            )}
-                          </div>
-                          {order.bookingDetails.birthPlace && (
-                            <div className="space-y-2">
-                              <label className="text-sm text-purple-300">Birth Place</label>
-                              <div className="text-white">{order.bookingDetails.birthPlace}</div>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
+            {/* Booking Details and Admin Notes removed as requested */}
 
-                    {order.bookingDetails.additionalNotes && (
-                      <>
-                        <Separator className="bg-purple-700/30" />
-                        <div className="space-y-2">
-                          <label className="text-sm text-purple-300">Additional Notes</label>
-                          <div className="bg-purple-800/30 p-4 rounded-md text-white whitespace-pre-wrap">
-                            {order.bookingDetails.additionalNotes}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
 
-            {/* Admin Notes */}
-            {order.adminNotes && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <Card className="bg-purple-900/30 border-purple-700/30 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5 text-yellow-400" />
-                      <CardTitle className="text-white">Admin Notes</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-md text-yellow-100">
-                      {order.adminNotes}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
           </div>
 
           {/* Sidebar - Contact Details */}

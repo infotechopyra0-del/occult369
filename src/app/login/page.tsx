@@ -46,12 +46,9 @@ function LoginForm() {
         return;
       }
 
-      // Get the session to determine user role
+      // Get session to determine user role (from secure cookie/session)
       const session = await getSession();
-      
       toast.success('Login successful! Redirecting...');
-      
-      // Redirect to callbackUrl or based on user role
       if (callbackUrl !== '/') {
         router.push(callbackUrl);
       } else if (session?.user?.role === 'admin') {
