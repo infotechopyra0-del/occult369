@@ -29,15 +29,12 @@ export async function GET() {
 
 // POST - Create new service
 export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
-    // In production, add proper authentication check
-    // const session = await getServerSession();
-    // if (!session?.user || session.user.role !== 'admin') {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
     const data = await request.json();
-    
     // Validate required fields
     const { serviceName, shortDescription, longDescription, price, serviceImage } = data;
     if (!serviceName || !shortDescription || !longDescription || !price || !serviceImage) {
@@ -94,13 +91,11 @@ export async function POST(request: Request) {
 
 // DELETE - Delete service
 export async function DELETE(request: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
-    // In production, add proper authentication check
-    // const session = await getServerSession();
-    // if (!session?.user || session.user.role !== 'admin') {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
     const { searchParams } = new URL(request.url);
     const serviceId = searchParams.get('id');
     

@@ -1,43 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import dbConnect from './src/lib/mongodb';
-import User from './src/models/User';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Get the token from the request
-  const token = await getToken({ 
-    req: request, 
-    secret: process.env.NEXTAUTH_SECRET 
-  });
+  try {
+    const token = await getToken({ 
+      req: request, 
+      secret: process.env.NEXTAUTH_SECRET 
+    });
 
-  // If user is authenticated and tries to access auth pages, redirect to home
-  if (token && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  // Protect admin routes - require authentication and admin role
-  if (pathname.startsWith('/admin')) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    // Fetch user from DB and check role
-    await dbConnect();
-    const user = await User.findOne({ email: token.email });
-    if (!user || user.role !== 'admin') {
+    // Redirect authenticated users away from auth pages
+    if (token && (pathname === '/login' || pathname === '/signup')) {
       return NextResponse.redirect(new URL('/', request.url));
     }
-  }
 
-  // Protect profile routes - require authentication
-  if (pathname.startsWith('/profile')) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+    // Admin routes protection with role check
+    if (pathname.startsWith('/admin')) {
+      // No token? Redirect to login
+      if (!token) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+      
+      // Token hai but admin nahi? Redirect to home
+      if (token.role !== 'admin') {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+      
+      // Admin hai! Access allowed
+      return NextResponse.next();
     }
-  }
 
-  return NextResponse.next();
+    // Protected routes (profile, orders) - just need authentication
+    if (pathname.startsWith('/profile') || pathname.startsWith('/orders')) {
+      if (!token) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+    }
+
+    return NextResponse.next();
+    
+  } catch (error) {
+    console.error('[Middleware] Error:', error);
+    // Error case me home redirect karo, infinite loop avoid karne ke liye
+    if (pathname !== '/') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return NextResponse.next();
+  }
 }
 
 export const config = {
@@ -45,6 +55,7 @@ export const config = {
     '/login',
     '/signup', 
     '/admin/:path*',
-    '/profile/:path*'
+    '/profile/:path*',
+    '/orders/:path*'
   ]
 };

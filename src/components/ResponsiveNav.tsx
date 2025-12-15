@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -47,10 +48,31 @@ export default function ResponsiveNav({ currentPage = '' }: ResponsiveNavProps) 
     }
   };
 
+  // Prevent background scroll when mobile menu is open
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-[9999] bg-[#301934]/95 backdrop-blur-md border-b border-[#B8860B]/30 shadow-lg transform-gpu will-change-transform">
+      {/* Mobile menu backdrop overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm transition-opacity duration-300 lg:hidden"
+          onClick={() => setIsOpen(false)}
+          style={{ top: '64px' }}
+        />
+      )}
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center py-3 md:py-4 px-4 sm:px-6 relative" style={{ minHeight: '64px', contain: 'layout' }}>
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <motion.div
               whileHover={{ scale: 1.05 }}
@@ -73,6 +95,7 @@ export default function ResponsiveNav({ currentPage = '' }: ResponsiveNavProps) 
             </div>
           </Link>
 
+          {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}>
@@ -96,108 +119,114 @@ export default function ResponsiveNav({ currentPage = '' }: ResponsiveNavProps) 
             ))}
           </div>
 
-          <div className="hidden lg:flex items-center space-x-4">
-            {status === 'loading' ? (
-              <div className="w-8 h-8 animate-spin rounded-full border-2 border-[#B8860B] border-t-transparent"></div>
-            ) : session?.user ? (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="relative h-10 w-10 rounded-full p-0 hover:bg-transparent focus:bg-transparent"
-                    style={{ outline: 'none', boxShadow: 'none' }}
+          {/* Desktop Auth Section + Mobile Menu Button */}
+          <div className="flex items-center space-x-4">
+            {/* Desktop Auth - Hidden on mobile */}
+            <div className="hidden lg:flex items-center space-x-4">
+              {status === 'loading' ? (
+                <div className="w-8 h-8 animate-spin rounded-full border-2 border-[#B8860B] border-t-transparent"></div>
+              ) : session?.user ? (
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="relative h-10 w-10 rounded-full p-0 hover:bg-transparent focus:bg-transparent"
+                      style={{ outline: 'none', boxShadow: 'none' }}
+                    >
+                      <Avatar className="h-10 w-10 border-2 border-[#B8860B]/20 hover:border-[#B8860B]/40 transition-all duration-200">
+                        <AvatarImage 
+                          src={session.user.profileImage || '/images/default.jpg'} 
+                          alt={session.user.name} 
+                        />
+                        <AvatarFallback className="bg-[#B8860B] text-[#301934] font-semibold">
+                          {session.user.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    className="w-56 bg-[#301934]/95 backdrop-blur-md border border-[#B8860B]/20 shadow-xl" 
+                    align="end" 
+                    forceMount
+                    sideOffset={8}
+                    style={{ zIndex: 9999 }}
                   >
-                    <Avatar className="h-10 w-10 border-2 border-[#B8860B]/20 hover:border-[#B8860B]/40 transition-all duration-200">
-                      <AvatarImage 
-                        src={session.user.profileImage || '/images/default.jpg'} 
-                        alt={session.user.name} 
-                      />
-                      <AvatarFallback className="bg-[#B8860B] text-[#301934] font-semibold">
-                        {session.user.name?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="w-56 bg-[#301934]/95 backdrop-blur-md border border-[#B8860B]/20 shadow-xl" 
-                  align="end" 
-                  forceMount
-                  sideOffset={8}
-                  style={{ zIndex: 9999 }}
-                >
-                  <div className="flex items-center justify-start gap-3 p-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage 
-                        src={session.user.profileImage || '/images/default.jpg'} 
-                        alt={session.user.name} 
-                      />
-                      <AvatarFallback className="bg-[#B8860B] text-[#301934] text-sm">
-                        {session.user.name?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium text-[#F5F5DC]" style={{fontFamily: 'sora'}}>{session.user.name}</p>
-                      <p className="w-[180px] truncate text-xs text-[#F5F5DC]/70" style={{fontFamily: 'sora'}}>
-                        {session.user.email}
-                      </p>
+                    <div className="flex items-center justify-start gap-3 p-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage 
+                          src={session.user.profileImage || '/images/default.jpg'} 
+                          alt={session.user.name} 
+                        />
+                        <AvatarFallback className="bg-[#B8860B] text-[#301934] text-sm">
+                          {session.user.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-1 leading-none">
+                        <p className="font-medium text-[#F5F5DC]" style={{fontFamily: 'sora'}}>{session.user.name}</p>
+                        <p className="w-[180px] truncate text-xs text-[#F5F5DC]/70" style={{fontFamily: 'sora'}}>
+                          {session.user.email}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <DropdownMenuSeparator className="bg-[#B8860B]/20" />
-                  <DropdownMenuItem asChild className="text-[#F5F5DC] hover:bg-[#B8860B]/20 focus:bg-[#B8860B]/20">
-                    <Link href="/profile" className="flex items-center" style={{fontFamily: 'sora'}}>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="text-[#F5F5DC] hover:bg-[#B8860B]/20 focus:bg-[#B8860B]/20">
-                    <Link href="/orders" className="flex items-center" style={{fontFamily: 'sora'}}>
-                      <ShoppingBag className="mr-2 h-4 w-4" />
-                      <span>Orders</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  {session.user.role === 'admin' && (
+                    <DropdownMenuSeparator className="bg-[#B8860B]/20" />
                     <DropdownMenuItem asChild className="text-[#F5F5DC] hover:bg-[#B8860B]/20 focus:bg-[#B8860B]/20">
-                      <Link href="/admin/dashboard" className="flex items-center" style={{fontFamily: 'sora'}}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Admin Dashboard</span>
+                      <Link href="/profile" className="flex items-center" style={{fontFamily: 'sora'}}>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator className="bg-[#B8860B]/20" />
-                  <DropdownMenuItem 
-                    onClick={handleLogout} 
-                    className="flex items-center text-red-400 hover:text-red-300 hover:bg-red-500/20 focus:bg-red-500/20"
-                    style={{fontFamily: 'sora'}}
+                    <DropdownMenuItem asChild className="text-[#F5F5DC] hover:bg-[#B8860B]/20 focus:bg-[#B8860B]/20">
+                      <Link href="/orders" className="flex items-center" style={{fontFamily: 'sora'}}>
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        <span>Orders</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {session.user.role === 'admin' && (
+                      <DropdownMenuItem asChild className="text-[#F5F5DC] hover:bg-[#B8860B]/20 focus:bg-[#B8860B]/20">
+                        <Link href="/admin/dashboard" className="flex items-center" style={{fontFamily: 'sora'}}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator className="bg-[#B8860B]/20" />
+                    <DropdownMenuItem 
+                      onClick={handleLogout} 
+                      className="flex items-center text-red-400 hover:text-red-300 hover:bg-red-500/20 focus:bg-red-500/20"
+                      style={{fontFamily: 'sora'}}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign Out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href="/login">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign Out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link href="/login">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button className="px-6 py-2 bg-gradient-to-r from-[#B8860B] to-[#B8860B]/80 text-[#301934] rounded-full text-sm font-semibold transition-shadow hover:shadow-lg hover:shadow-[#B8860B]/50 border-0 hover:from-[#B8860B]/90 hover:to-[#B8860B]/70" style={{fontFamily: 'sora'}}>
-                    Login
-                  </Button>
-                </motion.div>
-              </Link>
-            )}
+                    <Button className="px-6 py-2 bg-gradient-to-r from-[#B8860B] to-[#B8860B]/80 text-[#301934] rounded-full text-sm font-semibold transition-shadow hover:shadow-lg hover:shadow-[#B8860B]/50 border-0 hover:from-[#B8860B]/90 hover:to-[#B8860B]/70" style={{fontFamily: 'sora'}}>
+                      Login
+                    </Button>
+                  </motion.div>
+                </Link>
+              )}
+            </div>
 
+            {/* Mobile Menu Button - Visible on mobile, hidden on desktop */}
             <Button
               variant="ghost"
               size="sm"
               className="lg:hidden text-[#F5F5DC] hover:text-[#B8860B] hover:bg-[#B8860B]/10"
               onClick={() => setIsOpen(!isOpen)}
             >
-              {isOpen ? <X size={20} /> : <Menu size={20} />}
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
             </Button>
           </div>
         </div>
 
+        {/* Mobile Menu */}
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ 
@@ -206,9 +235,9 @@ export default function ResponsiveNav({ currentPage = '' }: ResponsiveNavProps) 
           }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.3 }}
-          className="lg:hidden overflow-hidden"
+          className="lg:hidden overflow-hidden fixed left-0 right-0 top-[64px] z-[9999] max-h-[calc(100vh-64px)] overflow-y-auto"
         >
-          <div className="bg-[#301934]/98 backdrop-blur-md border-t border-[#B8860B]/20 px-4 sm:px-6 pb-4">
+          <div className="bg-[#301934] border-t border-[#B8860B]/20 px-4 sm:px-6 pb-4 shadow-2xl">
             <div className="space-y-1 pt-4">
               {navLinks.map((link) => (
                 <Link key={link.href} href={link.href} onClick={() => setIsOpen(false)}>
