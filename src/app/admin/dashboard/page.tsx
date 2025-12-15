@@ -2,68 +2,139 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { LogOut } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  LogOut,
+  Users,
+  ShoppingCart,
+  FileText,
+  Settings,
+  MessageCircle,
+  TrendingUp,
+  Calendar,
+  Star,
+  Sparkles,
+  DollarSign,
+  Activity,
+  Phone
+} from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js';
+import { Line, Bar } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface DashboardStats {
+  totalUsers: number;
   totalOrders: number;
-  todaySales: number;
-  pendingOrders: number;
-  completedServices: number;
+  todayOrders: number;
+  monthlyOrders: number;
+  totalSampleReports: number;
+  todaySampleReports: number;
+  totalServices: number;
+  totalContacts: number;
+  todayContacts: number;
+  totalRevenue: number;
+  todayRevenue: number;
+  monthlyRevenue: number;
+}
+
+interface RevenueData {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
+interface RecentOrder {
+  _id: string;
+  userId: {
+    name: string;
+    email: string;
+  };
+  serviceId: {
+    serviceName: string;
+    price: number;
+  };
+  totalAmount: number;
+  createdAt: string;
+}
+
+interface RecentSampleReport {
+  _id: string;
+  firstName: string;
+  whatsappNumber: string;
+  createdAt: string;
 }
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
     totalOrders: 0,
-    todaySales: 0,
-    pendingOrders: 0,
-    completedServices: 0,
+    todayOrders: 0,
+    monthlyOrders: 0,
+    totalSampleReports: 0,
+    todaySampleReports: 0,
+    totalServices: 0,
+    totalContacts: 0,
+    todayContacts: 0,
+    totalRevenue: 0,
+    todayRevenue: 0,
+    monthlyRevenue: 0,
   });
+  const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [recentSampleReports, setRecentSampleReports] = useState<RecentSampleReport[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
+    if (status !== 'loading' && (!session || session.user?.role !== 'admin')) {
       router.push('/');
+      return;
     }
-  }, [status, session, router]);
+    
+    if (session?.user?.role === 'admin') {
+      fetchDashboardData();
+    }
+  }, [session, status, router]);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/admin/stats');
-        if (response.ok) {
-          const data = await response.json();
-          setStats({
-            totalOrders: data.totalOrders || 0,
-            todaySales: data.revenue || 0,
-            pendingOrders: data.totalContacts || 0,
-            completedServices: data.totalServices || 0,
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/admin/stats');
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
       }
-    };
-
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
-      fetchStats();
+      const data = await response.json();
+      
+      setStats(data.stats);
+      setRevenueData(data.revenueChartData || []);
+      setRecentOrders(data.recentOrders || []);
+      setRecentSampleReports(data.recentSampleReports || []);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [status, session]);
+  };
 
   if (status === 'loading' || loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen bg-[#f5f1e8]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#301934]"></div>
         </div>
       </AdminLayout>
@@ -74,153 +145,365 @@ export default function AdminDashboard() {
     return null;
   }
 
+  // Chart configuration
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value: any) {
+            return '₹' + value.toLocaleString('en-IN');
+          }
+        }
+      }
+    }
+  };
+
+  const revenueChartData = {
+    labels: revenueData.map(item => {
+      const date = new Date(item.date);
+      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+    }),
+    datasets: [
+      {
+        label: 'Revenue',
+        data: revenueData.map(item => item.revenue),
+        borderColor: '#B8860B',
+        backgroundColor: '#B8860B20',
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const ordersChartData = {
+    labels: revenueData.map(item => {
+      const date = new Date(item.date);
+      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+    }),
+    datasets: [
+      {
+        label: 'Orders',
+        data: revenueData.map(item => item.orders),
+        backgroundColor: '#301934',
+        borderColor: '#301934',
+        borderWidth: 1,
+      },
+    ],
+  };
+
   const statCards = [
+    {
+      title: 'Total Users',
+      value: stats.totalUsers,
+      todayValue: null,
+      icon: Users,
+      color: 'bg-blue-500',
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600'
+    },
     {
       title: 'Total Orders',
       value: stats.totalOrders,
+      todayValue: stats.todayOrders,
+      icon: ShoppingCart,
+      color: 'bg-green-500',
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-600'
     },
     {
-      title: "Today's Sales",
-      value: `₹${stats.todaySales}`,
+      title: 'Sample Reports',
+      value: stats.totalSampleReports,
+      todayValue: stats.todaySampleReports,
+      icon: FileText,
+      color: 'bg-purple-500',
+      bgColor: 'bg-purple-50',
+      textColor: 'text-purple-600'
     },
     {
-      title: 'Pending Orders',
-      value: stats.pendingOrders,
+      title: 'Services',
+      value: stats.totalServices,
+      todayValue: null,
+      icon: Settings,
+      color: 'bg-orange-500',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-600'
     },
     {
-      title: 'Completed Services',
-      value: stats.completedServices,
+      title: 'Contacts',
+      value: stats.totalContacts,
+      todayValue: stats.todayContacts,
+      icon: MessageCircle,
+      color: 'bg-pink-500',
+      bgColor: 'bg-pink-50',
+      textColor: 'text-pink-600'
+    },
+    {
+      title: 'Total Revenue',
+      value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`,
+      todayValue: `₹${stats.todayRevenue.toLocaleString('en-IN')}`,
+      icon: DollarSign,
+      color: 'bg-yellow-500',
+      bgColor: 'bg-yellow-50',
+      textColor: 'text-yellow-600'
     },
   ];
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
   return (
     <AdminLayout>
-      <div className="w-full h-screen bg-[#f5f1e8] overflow-hidden flex flex-col">
-        {/* Header with Purple Gradient */}
-        <div className="bg-gradient-to-r from-[#301934] to-purple-700 px-6 lg:px-8 py-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-white font-heading mb-1">
-              Admin Dashboard
-            </h1>
-            <p className="text-purple-100 font-sora text-sm">
-              Welcome back, {session.user?.name || 'Admin'}
-            </p>
+      <div className="h-screen bg-[#f5f1e8] flex flex-col overflow-hidden">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-40 bg-gradient-to-r from-[#301934] to-purple-700 px-6 lg:px-8 py-3 shadow-lg overflow-hidden">
+          {/* Decorative Elements */}
+          <div className="absolute -top-2 -left-2 w-8 h-8 bg-[#B8860B]/10 rounded-full flex items-center justify-center">
+            <Star className="w-4 h-4 text-[#B8860B] animate-pulse" />
           </div>
-          <Button
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            variant="outline"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-sora"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="absolute top-2 right-16 w-6 h-6 bg-[#A020F0]/20 rounded-full flex items-center justify-center">
+            <Sparkles className="w-3 h-3 text-[#A020F0] animate-bounce" />
+          </div>
+          <div className="absolute -bottom-1 left-20 w-5 h-5 bg-[#B8860B]/15 rounded-full flex items-center justify-center">
+            <Star className="w-2.5 h-2.5 text-[#B8860B] animate-ping" />
+          </div>
+          <div className="absolute top-1/2 right-1/3 w-4 h-4 bg-[#A020F0]/10 rounded-full flex items-center justify-center">
+            <Sparkles className="w-2 h-2 text-[#A020F0] animate-pulse" />
+          </div>
+          <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-[#B8860B]/20 rounded-full flex items-center justify-center">
+            <Star className="w-3.5 h-3.5 text-[#B8860B] animate-spin" style={{ animationDuration: '8s' }} />
+          </div>
+          
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
+            <div>
+              <h1 className="text-3xl font-bold text-white font-heading mb-1 flex items-center gap-2">
+                <Activity className="w-8 h-8 text-[#B8860B]" />
+                Admin Dashboard
+                <Sparkles className="w-6 h-6 text-[#A020F0] animate-pulse ml-2" />
+              </h1>
+              <p className="text-purple-100 font-sora text-sm flex items-center gap-1">
+                <Star className="w-3 h-3 text-[#B8860B]" />
+                Welcome back, {session.user?.name || 'Admin'}
+              </p>
+            </div>
+            
+            <Button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-sora"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
-        {/* Main Content */}
+        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 lg:p-8 space-y-6 admin-contacts-scroll">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 min-[640px]:grid-cols-2 xl:grid-cols-4 gap-4 w-full">
-            {statCards.map((stat, index) => (
-              <motion.div
-                key={stat.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="bg-white border-none shadow-md hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 font-sora mb-2">
-                      {stat.title}
-                    </p>
-                    <p className="text-3xl font-bold text-gray-900 font-heading">
-                      {stat.value}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {statCards.map((stat, index) => {
+              const IconComponent = stat.icon;
+              return (
+                <motion.div
+                  key={stat.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="bg-white border-none shadow-md hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                          <IconComponent className={`w-6 h-6 ${stat.textColor}`} />
+                        </div>
+                        {stat.todayValue !== null && (
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500 font-sora">Today</p>
+                            <p className="text-sm font-semibold text-gray-700 font-sora">
+                              {typeof stat.todayValue === 'number' ? `+${stat.todayValue}` : stat.todayValue}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 font-sora mb-1">
+                          {stat.title}
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 font-heading">
+                          {stat.value}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Revenue Chart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="lg:col-span-2"
+              transition={{ delay: 0.6 }}
             >
               <Card className="bg-white border-none shadow-md">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-800 font-heading mb-6">
-                    Revenue (Last 7 days)
-                  </h3>
-                  <div className="h-80 flex items-center justify-center">
-                    <div className="w-full h-full relative">
-                      {/* Simple Chart Placeholder */}
-                      <div className="absolute inset-0 flex items-end justify-around px-4 pb-8">
-                        {[0, 0, 0, 0, 0, 0, 0].map((value, i) => (
-                          <div key={i} className="flex-1 mx-1 flex flex-col items-center">
-                            <div 
-                              className="w-full bg-blue-500 rounded-t"
-                              style={{ height: `${value || 2}%` }}
-                            ></div>
-                          </div>
-                        ))}
-                      </div>
-                      {/* Axis */}
-                      <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-300"></div>
-                      <div className="absolute bottom-0 left-0 top-0 w-px bg-gray-300"></div>
-                      {/* Labels */}
-                      <div className="absolute bottom-2 left-0 right-0 flex justify-around text-xs text-gray-500 font-sora">
-                        <span>2025-11-25</span>
-                        <span>2025-11-26</span>
-                        <span>2025-11-27</span>
-                        <span>2025-11-28</span>
-                        <span>2025-11-29</span>
-                        <span>2025-11-30</span>
-                        <span>2025-12-01</span>
-                      </div>
-                      {/* Y-axis labels */}
-                      <div className="absolute left-2 top-0 bottom-8 flex flex-col justify-between text-xs text-gray-500 font-sora">
-                        <span>1.0</span>
-                        <span>0.8</span>
-                        <span>0.6</span>
-                        <span>0.4</span>
-                        <span>0.2</span>
-                        <span>0</span>
-                        <span>-0.2</span>
-                        <span>-0.4</span>
-                        <span>-0.6</span>
-                        <span>-0.8</span>
-                        <span>-1.0</span>
-                      </div>
-                      {/* Legend */}
-                      <div className="absolute top-4 right-4 flex items-center gap-2">
-                        <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                        <span className="text-sm text-gray-600 font-sora">Revenue</span>
-                      </div>
-                    </div>
+                <CardHeader>
+                  <CardTitle className="font-heading text-gray-800 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-[#B8860B]" />
+                    Revenue Trend (Last 7 Days)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <Line data={revenueChartData} options={chartOptions} />
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
-            {/* Recent Purchases */}
+            {/* Orders Chart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.7 }}
             >
-              <Card className="bg-white border-none shadow-md h-full">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-800 font-heading mb-6">
-                    Recent Purchases
-                  </h3>
-                  <div className="flex items-center justify-center h-64">
-                    <p className="text-gray-500 font-sora text-sm">
-                      No recent purchases
-                    </p>
+              <Card className="bg-white border-none shadow-md">
+                <CardHeader>
+                  <CardTitle className="font-heading text-gray-800 flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5 text-[#301934]" />
+                    Orders Trend (Last 7 Days)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-80">
+                    <Bar data={ordersChartData} options={chartOptions} />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Recent Activity Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Orders */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <Card className="bg-white border-none shadow-md">
+                <CardHeader>
+                  <CardTitle className="font-heading text-gray-800">Recent Orders</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="max-h-80 overflow-y-auto">
+                    {recentOrders.length > 0 ? (
+                      <div className="space-y-1">
+                        {recentOrders.map((order, index) => (
+                          <motion.div
+                            key={order._id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 * index }}
+                            className="p-4 border-b hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-900 font-sora text-sm">
+                                  {order.userId.name}
+                                </p>
+                                <p className="text-sm text-gray-600 font-sora">
+                                  {order.serviceId.serviceName}
+                                </p>
+                                <p className="text-xs text-gray-500 font-sora">
+                                  {formatDate(order.createdAt)}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-[#B8860B] font-heading">
+                                  ₹{order.totalAmount.toLocaleString('en-IN')}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center">
+                        <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 font-sora">No recent orders</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Recent Sample Reports */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+            >
+              <Card className="bg-white border-none shadow-md">
+                <CardHeader>
+                  <CardTitle className="font-heading text-gray-800">Recent Sample Reports</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="max-h-80 overflow-y-auto">
+                    {recentSampleReports.length > 0 ? (
+                      <div className="space-y-1">
+                        {recentSampleReports.map((report, index) => (
+                          <motion.div
+                            key={report._id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 * index }}
+                            className="p-4 border-b hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="font-medium text-gray-900 font-sora text-sm">
+                                  {report.firstName}
+                                </p>
+                                <div className="flex items-center gap-1 text-sm text-gray-600">
+                                  <Phone className="w-3 h-3" />
+                                  <span className="font-sora">{report.whatsappNumber}</span>
+                                </div>
+                                <p className="text-xs text-gray-500 font-sora">
+                                  {formatDate(report.createdAt)}
+                                </p>
+                              </div>
+                              <div className="w-8 h-8 bg-[#B8860B]/10 rounded-full flex items-center justify-center">
+                                <FileText className="w-4 h-4 text-[#B8860B]" />
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center">
+                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 font-sora">No recent sample reports</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

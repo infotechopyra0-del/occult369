@@ -73,12 +73,14 @@
 /* Prevent scrollbar disappearance on modal/dropdown open */
 html {
   overflow-y: scroll !important;
+  overflow-x: hidden !important;
   scrollbar-gutter: stable;
   width: 100vw;
 }
 
 body {
   overflow-y: scroll !important;
+  overflow-x: hidden !important;
   scrollbar-gutter: stable;
   width: 100%;
 }

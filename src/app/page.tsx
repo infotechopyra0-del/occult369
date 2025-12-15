@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Image } from '@/components/ui/image';
 import { Star, Sparkles, Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { BaseCrudService } from '@/integrations';
 import { Services, Testimonials } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import { toast } from 'sonner';
@@ -40,67 +39,45 @@ export default function HomePage() {
     setResult("Sending....");
     
     try {
-      // Validate birth date
-      if (!formData.birthDate) {
-        toast.error('Birth date is required');
+      // Validate form data
+      if (!formData.firstName || !formData.birthDate || !formData.whatsappNumber) {
+        toast.error('All fields are required');
+        setResult('Error: All fields are required');
         return;
       }
 
-      // Parse birth date
-      const birthDateObj = new Date(formData.birthDate);
-      const submitData = {
-        firstName: formData.firstName.trim(),
-        name: formData.firstName.trim(), // Using firstName as name for compatibility
-        birthDate: {
-          day: birthDateObj.getDate(),
-          month: birthDateObj.getMonth() + 1,
-          year: birthDateObj.getFullYear()
-        },
-        whatsappNumber: formData.whatsappNumber.trim()
-      };
-
-      // Save to database
-      const response = await fetch('/api/reports', {
+      // Save to database using SampleReport model
+      const response = await fetch('/api/sample-reports', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(submitData)
+        body: JSON.stringify({
+          firstName: formData.firstName.trim(),
+          birthDate: formData.birthDate,
+          whatsappNumber: formData.whatsappNumber.trim()
+        })
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Sample Report Request Sent Successfully!');
-        setResult('Sample Report Request Sent Successfully!');
+        toast.success('🌟 Sample Report Request Saved Successfully! We will contact you soon.');
+        setResult('Success: Sample Report Request Saved Successfully!');
         // Reset form
         setFormData({
           firstName: '',
           birthDate: '',
           whatsappNumber: ''
         });
-        
-        // Also send to web3forms for email notification
-        const formDataForEmail = new FormData();
-        formDataForEmail.append('access_key', '0a5155ff-51aa-4945-b7d8-b69123baeecd');
-        formDataForEmail.append('name', submitData.firstName);
-        formDataForEmail.append('birth_date', formData.birthDate);
-        formDataForEmail.append('whatsapp', submitData.whatsappNumber);
-        formDataForEmail.append('subject', 'Free Sample Numerology Report Request');
-        
-        await fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          body: formDataForEmail
-        });
-        
       } else {
-        toast.error(data.error || 'Failed to submit report request');
-        setResult('Error: ' + (data.error || 'Failed to submit report request'));
+        toast.error(data.error || 'Failed to save report request');
+        setResult('Error: ' + (data.error || 'Failed to save report request'));
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      toast.error('Failed to submit report request. Please try again.');
-      setResult('Error: Failed to submit report request');
+      toast.error('Failed to save report request. Please try again.');
+      setResult('Error: Failed to save report request');
     } finally {
       setIsSubmitting(false);
     }
@@ -109,14 +86,33 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [servicesData, testimonialsData] = await Promise.all([
-          BaseCrudService.getAll<Services>('services'),
-          BaseCrudService.getAll<Testimonials>('testimonials')
+        console.log('Fetching services and testimonials...');
+        const [servicesResponse, testimonialsResponse] = await Promise.all([
+          fetch('/api/services'),
+          fetch('/api/testimonials')
         ]);
-        setServices(servicesData.items.slice(0, 3));
-        setTestimonials(testimonialsData.items.slice(0, 3));
+        
+        console.log('Services response:', servicesResponse.status);
+        console.log('Testimonials response:', testimonialsResponse.status);
+        
+        if (servicesResponse.ok && testimonialsResponse.ok) {
+          const servicesData = await servicesResponse.json();
+          const testimonialsData = await testimonialsResponse.json();
+          
+          console.log('Services data:', servicesData);
+          console.log('Testimonials data:', testimonialsData);
+          
+          setServices(servicesData.services?.slice(0, 3) || []);
+          setTestimonials(testimonialsData.testimonials?.slice(0, 3) || []);
+        } else {
+          console.log('API responses not OK');
+          setServices([]);
+          setTestimonials([]);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
+        setServices([]);
+        setTestimonials([]);
       }
     };
     fetchData();
@@ -843,16 +839,14 @@ export default function HomePage() {
                     <div className="text-2xl font-heading font-bold text-[#B8860B] mb-6">
                       ₹{service.price.toLocaleString('en-IN')}
                     </div>
-                    <a 
-                      href={`https://wa.me/916390057777?text=Hi! I want to buy the ${service.serviceName} service for ₹${service.price.toLocaleString('en-IN')}. Please send me the payment details and schedule my session.`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link 
+                      href="/services"
                       className="block w-full"
                     >
                       <Button className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 font-semibold">
-                        💬 Buy Now
+                        Buy Now
                       </Button>
-                    </a>
+                    </Link>
                   </CardContent>
                 </Card>
               </motion.div>
