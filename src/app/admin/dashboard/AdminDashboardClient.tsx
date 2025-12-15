@@ -1,4 +1,3 @@
-
 "use client"
 // Defensive helper for safe toLocaleString
 function safeLocaleString(val: unknown): string {
@@ -14,7 +13,7 @@ function safeLocaleString(val: unknown): string {
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -25,18 +24,16 @@ import {
   Settings,
   MessageCircle,
   TrendingUp,
-  Calendar,
-  Star,
-  Sparkles,
   DollarSign,
   Activity,
-  Phone
+  Phone,
+  Star,
+  Sparkles
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { motion } from 'framer-motion';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
-
 
 // Register Chart.js components
 ChartJS.register(
@@ -93,7 +90,7 @@ interface RecentSampleReport {
   createdAt: string;
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboardClient() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
@@ -116,13 +113,16 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (status === 'loading') return; // Wait for session to load
-    if (!session || session.user?.role !== 'admin') {
+    // REMOVED REDIRECT LOGIC - Server-side already handled it!
+    // Only fetch data if authenticated and admin
+    if (status === 'authenticated' && session?.user?.role === 'admin') {
+      fetchDashboardData();
+    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
+      // Only redirect if definitely NOT admin (prevents race condition)
+      console.log('Not admin, redirecting to home');
       router.push('/');
-      return;
     }
-    // Only call backend if user is admin
-    fetchDashboardData();
+    // If status is 'loading', do nothing - let it load
   }, [session, status, router]);
 
   const fetchDashboardData = async () => {
@@ -144,6 +144,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // Show loading only when status is loading
   if (status === 'loading' || loading) {
     return (
       <AdminLayout>
@@ -154,6 +155,7 @@ export default function AdminDashboard() {
     );
   }
 
+  // If not authenticated or not admin, show nothing (redirect will happen)
   if (!session || session.user?.role !== 'admin') {
     return null;
   }

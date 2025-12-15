@@ -46,21 +46,39 @@ function LoginForm() {
         return;
       }
 
-      // Get session to determine user role (from secure cookie/session)
-      const session = await getSession();
-      toast.success('Login successful! Redirecting...');
-      if (callbackUrl !== '/') {
-        router.push(callbackUrl);
-      } else if (session?.user?.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/');
+      if (result?.ok) {
+        // Get fresh session to check user role
+        const session = await getSession();
+        
+        console.log('Login successful, session:', session);
+        toast.success('Login successful! Redirecting...');
+        
+        // Wait a bit for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Priority 1: If there's a callback URL (except login/signup), use it
+        if (callbackUrl && callbackUrl !== '/' && callbackUrl !== '/login' && callbackUrl !== '/signup') {
+          console.log('Redirecting to callback URL:', callbackUrl);
+          router.push(callbackUrl);
+          router.refresh();
+        } 
+        // Priority 2: If user is admin, send to admin dashboard
+        else if (session?.user?.role === 'admin') {
+          console.log('Admin user detected, redirecting to dashboard');
+          router.push('/admin/dashboard');
+          router.refresh();
+        } 
+        // Priority 3: Regular user goes to home
+        else {
+          console.log('Regular user, redirecting to home');
+          router.push('/');
+          router.refresh();
+        }
       }
       
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Something went wrong. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };

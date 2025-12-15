@@ -181,7 +181,7 @@ export default function ResponsiveNav({ currentPage = '' }: ResponsiveNavProps) 
                         <span>Orders</span>
                       </Link>
                     </DropdownMenuItem>
-                    {session.user.role === 'admin' && (
+                    {status === 'authenticated' && session.user.role === 'admin' && (
                       <DropdownMenuItem asChild className="text-[#F5F5DC] hover:bg-[#B8860B]/20 focus:bg-[#B8860B]/20">
                         <Link href="/admin/dashboard" className="flex items-center" style={{fontFamily: 'sora'}}>
                           <Settings className="mr-2 h-4 w-4" />
@@ -293,7 +293,7 @@ export default function ResponsiveNav({ currentPage = '' }: ResponsiveNavProps) 
                     </motion.div>
                   </Link>
                   
-                  {session.user.role === 'admin' && (
+                  {status === 'authenticated' && session.user.role === 'admin' && (
                     <Link href="/admin/dashboard" onClick={() => setIsOpen(false)}>
                       <motion.div
                         whileTap={{ scale: 0.95 }}

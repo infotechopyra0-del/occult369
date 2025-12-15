@@ -142,10 +142,7 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .limit(3)
       .lean();
-
-    // Debug log for troubleshooting
-    // eslint-disable-next-line no-console
-    console.log('DEBUG: totalUsers =', totalUsers, 'DB =', (await dbConnect()).connection.name);
+      
     return NextResponse.json({
       success: true,
       stats: {

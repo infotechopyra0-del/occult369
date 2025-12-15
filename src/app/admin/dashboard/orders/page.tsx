@@ -322,13 +322,13 @@ export default function OrdersPage() {
         </div>
       </div>
     {/* View Order Modal */}
-    <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
-      <DialogContent>
+    <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen} >
+      <DialogContent className='bg-[#f5f1e8]'>
         <DialogHeader>
           <DialogTitle>Order Details</DialogTitle>
         </DialogHeader>
         {selectedOrder && (
-          <div className="space-y-2">
+          <div className="space-y-2 bg-[#f5f1e8]">
             <div><b>Order ID:</b> {selectedOrder.orderId}</div>
             <div><b>Service:</b> {selectedOrder.serviceName} ({selectedOrder.serviceType})</div>
             <div><b>Price:</b> ₹{selectedOrder.price}</div>
@@ -346,7 +346,7 @@ export default function OrdersPage() {
 
     {/* Edit Order Modal */}
     <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-      <DialogContent>
+      <DialogContent className='bg-[#f5f1e8]'>
         <DialogHeader>
           <DialogTitle>Edit Order</DialogTitle>
         </DialogHeader>
