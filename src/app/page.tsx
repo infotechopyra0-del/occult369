@@ -8,8 +8,8 @@ import { Star, Sparkles, Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Services, Testimonials } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
-import { toast } from 'sonner';
-
+import { toast } from 'sonner'; 
+ 
 export default function HomePage() {
   const [services, setServices] = useState<Services[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonials[]>([]);
