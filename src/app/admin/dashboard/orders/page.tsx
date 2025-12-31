@@ -100,7 +100,6 @@ export default function OrdersPage() {
           setOrders([]);
         }
       } catch (error) {
-        console.error('Error fetching orders:', error);
         setOrders([]);
       } finally {
         setLoading(false);

@@ -4,25 +4,14 @@ import Contact from '@/models/Contact';
 
 export async function POST(request: Request) {
   try {
-    console.log('📧 Contact API called');
     const data = await request.json();
-    console.log('📝 Received data:', data);
-    
-    // Validate required fields
     const { name, email, message } = data;
     if (!name || !email || !message) {
-      console.log('❌ Validation failed - missing required fields');
       return NextResponse.json({ 
         error: 'Name, email, and message are required' 
       }, { status: 400 });
     }
-
-    console.log('🔗 Connecting to database...');
     await connectToDatabase();
-    console.log('✅ Database connected successfully');
-
-    // Create new contact
-    console.log('💾 Creating new contact in database...');
     const newContact = await Contact.create({
       name: data.name,
       email: data.email,
@@ -32,16 +21,12 @@ export async function POST(request: Request) {
       message: data.message,
       status: 'new',
     });
-    
-    console.log('✅ Contact created successfully:', newContact._id);
-
     return NextResponse.json({ 
       contact: newContact,
       message: 'Message sent successfully! We will contact you soon.',
       success: true 
     });
   } catch (error) {
-    console.error('Error creating contact:', error);
     if (error instanceof Error && error.name === 'ValidationError') {
       return NextResponse.json({ 
         error: 'Validation failed: ' + error.message 
@@ -52,8 +37,6 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
-
-// GET - Fetch all contacts (for admin)
 export async function GET() {
   try {
     await connectToDatabase();
@@ -65,7 +48,6 @@ export async function GET() {
       success: true 
     });
   } catch (error) {
-    console.error('Error fetching contacts:', error);
     return NextResponse.json({ 
       error: 'Failed to fetch contacts' 
     }, { status: 500 });

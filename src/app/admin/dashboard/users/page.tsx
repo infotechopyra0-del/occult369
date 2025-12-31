@@ -71,7 +71,6 @@ export default function UsersPage() {
           setUsers([]);
         }
       } catch (error) {
-        console.error('Error fetching users:', error);
         setUsers([]);
       } finally {
         setLoading(false);
@@ -129,7 +128,6 @@ export default function UsersPage() {
           setUsers(users.filter(u => u._id !== userId));
         }
       } catch (error) {
-        console.error('Error deleting user:', error);
       }
     }
   };

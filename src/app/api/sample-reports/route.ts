@@ -7,25 +7,22 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { firstName, birthDate, whatsappNumber } = body;
-
-    // Validate required fields
-    if (!firstName || !birthDate || !whatsappNumber) {
+    const { firstName, birthDate, time, whatsappNumber, email, city } = body;
+    if (!firstName || !birthDate || !time || !whatsappNumber || !email || !city) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
       );
     }
-
-    // Create new sample report
     const sampleReport = new SampleReport({
       firstName: firstName.trim(),
       birthDate: new Date(birthDate),
-      whatsappNumber: whatsappNumber.trim()
+      time: time,
+      whatsappNumber: whatsappNumber.trim(),
+      email: email.trim(),
+      city: city.trim()
     });
-
     await sampleReport.save();
-
     return NextResponse.json(
       { 
         success: true, 
@@ -34,17 +31,13 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-
   } catch (error) {
-    console.error('Error saving sample report:', error);
-    
     if (error instanceof Error) {
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
       );
     }
-    
     return NextResponse.json(
       { error: 'Failed to save sample report request' },
       { status: 500 }
@@ -66,7 +59,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching sample reports:', error);
     return NextResponse.json(
       { error: 'Failed to fetch sample reports' },
       { status: 500 }

@@ -15,20 +15,16 @@ export async function GET() {
   }
   try {
     await dbConnect();
-    // Get current date for today's calculations
     const today = new Date();
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-    // Get start of current month
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    // Get last 7 days for revenue chart
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       last7Days.push(new Date(date.getFullYear(), date.getMonth(), date.getDate()));
     }
-    // Parallel database queries for better performance
     const [
       totalUsers,
       totalOrders,
@@ -73,7 +69,6 @@ export async function GET() {
       ])
     ]);
 
-    // Calculate total revenue
     const totalRevenueResult = await Order.aggregate([
       {
         $group: {
@@ -115,7 +110,6 @@ export async function GET() {
     const todayRevenue = todayRevenueResult[0]?.total || 0;
     const monthlyRevenue = monthlyRevenueResult[0]?.total || 0;
 
-    // Format revenue data for chart
     const revenueChartData = last7Days.map(date => {
       const dayData = last7DaysOrders.find(order => 
         order._id.year === date.getFullYear() &&
@@ -130,14 +124,12 @@ export async function GET() {
       };
     });
 
-    // Get recent orders for activity feed
     const recentOrders = await Order.find()
       .populate('userId', 'name email')
       .sort({ createdAt: -1 })
       .limit(5)
       .lean();
 
-    // Get recent sample reports
     const recentSampleReports = await SampleReport.find()
       .sort({ createdAt: -1 })
       .limit(3)
@@ -165,7 +157,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
     return NextResponse.json(
       { error: 'Failed to fetch admin statistics' },
       { status: 500 }

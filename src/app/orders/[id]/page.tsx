@@ -23,8 +23,6 @@ import {
   User,
   Phone,
   Mail,
-
-  FileText,
   RefreshCw,
   Copy,
   CheckCircle,
@@ -75,7 +73,6 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Authentication check
   useEffect(() => {
     if (status === 'loading') return;
     if (status === 'unauthenticated') {
@@ -85,7 +82,6 @@ export default function OrderDetailsPage() {
     }
   }, [status, router]);
 
-  // Fetch order details
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!session?.user?.id || !orderId) return;
@@ -105,9 +101,7 @@ export default function OrderDetailsPage() {
           toast.success('Order details loaded successfully');
         }
       } catch (error) {
-        console.error('Error fetching order details:', error);
         toast.error(error instanceof Error ? error.message : 'Failed to load order details');
-        // Redirect back to orders page on error
         setTimeout(() => router.push('/orders'), 2000);
       } finally {
         setLoading(false);
@@ -117,7 +111,6 @@ export default function OrderDetailsPage() {
     fetchOrderDetails();
   }, [session?.user?.id, orderId, router]);
 
-  // Copy to clipboard function
   const copyToClipboard = async (text: string, type: string) => {
     try {
       await navigator.clipboard.writeText(text);

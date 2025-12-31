@@ -3,7 +3,6 @@ import connectToDatabase from '@/lib/mongodb';
 import User from '@/models/User';
 import { z } from 'zod';
 
-// Validation schema
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name must be less than 50 characters'),
   email: z.string().email('Please provide a valid email address'),
@@ -17,8 +16,6 @@ const signupSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Validate input
     const validationResult = signupSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
@@ -30,8 +27,6 @@ export async function POST(request: NextRequest) {
     const { name, email, password } = validationResult.data;
 
     await connectToDatabase();
-
-    // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return NextResponse.json(
@@ -39,8 +34,6 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-
-    // Create new user
     const user = new User({
       name,
       email: email.toLowerCase(),
@@ -50,8 +43,6 @@ export async function POST(request: NextRequest) {
     });
 
     await user.save();
-
-    // Return success response (without password)
     return NextResponse.json(
       {
         message: 'Account created successfully',
@@ -67,7 +58,6 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Signup error:', error);
     return NextResponse.json(
       { error: 'Internal server error. Please try again later.' },
       { status: 500 }

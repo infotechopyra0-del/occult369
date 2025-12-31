@@ -1,6 +1,3 @@
-// Base CRUD Service for API interactions
-// This is a mock implementation - replace with your actual API integration
-
 interface PaginatedResponse<T> {
   items: T[];
   total: number;
@@ -10,24 +7,15 @@ interface PaginatedResponse<T> {
 
 export class BaseCrudService {
   private static baseURL = process.env.NEXT_PUBLIC_API_URL || '/api';
-
-  /**
-   * Get all items from a collection with pagination
-   */
   static async getAll<T>(collection: string, params?: Record<string, unknown>): Promise<PaginatedResponse<T>> {
     try {
-      // Mock data for development - params would be used in real API
-      console.log('Fetching collection:', collection, params ? 'with params' : '');
       return this.getMockData<T>(collection);
     } catch (error) {
-      console.error(`Error fetching ${collection}:`, error);
+
       throw error;
     }
   }
 
-  /**
-   * Get a single item by ID
-   */
   static async getById<T>(collection: string, id: string): Promise<T> {
     try {
       const response = await fetch(`${this.baseURL}/admin/${collection}/${id}`);
@@ -35,14 +23,10 @@ export class BaseCrudService {
       const data = await response.json();
       return data.service || data.item || data;
     } catch (error) {
-      console.error(`Error fetching ${collection} by ID:`, error);
       throw error;
     }
   }
 
-  /**
-   * Create a new item
-   */
   static async create<T>(collection: string, data: Partial<T>): Promise<T> {
     try {
       const response = await fetch(`${this.baseURL}/admin/${collection}`, {
@@ -56,14 +40,10 @@ export class BaseCrudService {
       const result = await response.json();
       return result.service || result.item || result;
     } catch (error) {
-      console.error(`Error creating ${collection}:`, error);
       throw error;
     }
   }
 
-  /**
-   * Update an existing item
-   */
   static async update<T>(collection: string, id: string, data: Partial<T>): Promise<T> {
     try {
       const response = await fetch(`${this.baseURL}/admin/${collection}/${id}`, {
@@ -77,14 +57,9 @@ export class BaseCrudService {
       const result = await response.json();
       return result.service || result.item || result;
     } catch (error) {
-      console.error(`Error updating ${collection}:`, error);
       throw error;
     }
   }
-
-  /**
-   * Delete an item
-   */
   static async delete(collection: string, id: string): Promise<void> {
     try {
       const response = await fetch(`${this.baseURL}/admin/${collection}?id=${id}`, {
@@ -92,15 +67,9 @@ export class BaseCrudService {
       });
       if (!response.ok) throw new Error('Failed to delete item');
     } catch (error) {
-      console.error(`Error deleting ${collection}:`, error);
       throw error;
     }
   }
-
-  /**
-   * Mock data for development
-   * Replace this with actual API calls in production
-   */
   private static getMockData<T>(collection: string): PaginatedResponse<T> {
     const mockData: Record<string, unknown> = {
       testimonials: {

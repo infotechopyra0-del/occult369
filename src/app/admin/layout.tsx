@@ -10,7 +10,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Ye check har admin page ke liye automatically run hoga
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user?.email) {
@@ -23,11 +22,8 @@ export default async function AdminLayout({
   if (!user || user.role !== 'admin') {
     redirect('/');
   }
-
-  // Admin verified, render children
   return <>{children}</>;
 }
 
-// Force dynamic rendering (no caching)
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

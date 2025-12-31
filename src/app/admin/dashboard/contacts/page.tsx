@@ -83,7 +83,6 @@ export default function ContactsPage() {
       const data = await response.json();
       setContacts(data.contacts || []);
     } catch (error) {
-      console.error('Error fetching contacts:', error);
       toast.error('Failed to load contacts');
     } finally {
       setLoading(false);
@@ -107,7 +106,6 @@ export default function ContactsPage() {
       setShowDeleteDialog(false);
       setContactToDelete(null);
     } catch (error) {
-      console.error('Error deleting contact:', error);
       toast.error('Failed to delete contact');
     }
   };

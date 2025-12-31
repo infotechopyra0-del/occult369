@@ -19,7 +19,6 @@ export async function GET() {
       sampleReports
     });
   } catch (error) {
-    console.error('Error fetching sample reports:', error);
     return NextResponse.json({ error: 'Failed to fetch sample reports' }, { status: 500 });
   }
 }
@@ -38,10 +37,10 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { firstName, birthDate, whatsappNumber } = body;
+    const { firstName, birthDate, time, whatsappNumber, email, city } = body;
 
     // Validate required fields
-    if (!firstName || !birthDate || !whatsappNumber) {
+    if (!firstName || !birthDate || !time || !whatsappNumber || !email || !city) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
@@ -52,7 +51,10 @@ export async function POST(request: NextRequest) {
     const sampleReport = new SampleReport({
       firstName: firstName.trim(),
       birthDate: new Date(birthDate),
-      whatsappNumber: whatsappNumber.trim()
+      time: time,
+      whatsappNumber: whatsappNumber.trim(),
+      email: email.trim(),
+      city: city.trim()
     });
 
     await sampleReport.save();
@@ -67,7 +69,6 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error creating sample report:', error);
     
     if (error instanceof Error) {
       return NextResponse.json(

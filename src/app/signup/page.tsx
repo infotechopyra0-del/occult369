@@ -89,7 +89,6 @@ export default function SignupPage() {
       }
       
     } catch (error) {
-      console.error('Signup error:', error);
       toast.error('Network error. Please try again.');
     } finally {
       setIsLoading(false);

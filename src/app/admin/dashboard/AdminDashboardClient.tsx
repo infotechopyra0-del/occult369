@@ -1,5 +1,4 @@
 "use client"
-// Defensive helper for safe toLocaleString
 function safeLocaleString(val: unknown): string {
   if (typeof val === 'number' && Number.isFinite(val)) {
     try {
@@ -113,16 +112,11 @@ export default function AdminDashboardClient() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // REMOVED REDIRECT LOGIC - Server-side already handled it!
-    // Only fetch data if authenticated and admin
     if (status === 'authenticated' && session?.user?.role === 'admin') {
       fetchDashboardData();
     } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
-      // Only redirect if definitely NOT admin (prevents race condition)
-      console.log('Not admin, redirecting to home');
       router.push('/');
     }
-    // If status is 'loading', do nothing - let it load
   }, [session, status, router]);
 
   const fetchDashboardData = async () => {
@@ -138,7 +132,6 @@ export default function AdminDashboardClient() {
       setRecentOrders(data.recentOrders || []);
       setRecentSampleReports(data.recentSampleReports || []);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }

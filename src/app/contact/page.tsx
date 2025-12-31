@@ -46,8 +46,7 @@ export default function ContactPage() {
       
       if (response.ok && data.success) {
         toast.success('✨ Message sent successfully! We will contact you soon through your preferred method.');
-        
-        // Reset form
+      
         setFormData({
           name: '',
           email: '',
@@ -65,12 +64,10 @@ export default function ContactPage() {
         }, 2000);
         
       } else {
-        console.error("Form submission error:", data);
         toast.error(data.error || '❌ There was an error sending your message. Please try again or contact us directly via WhatsApp.');
         setResult("❌ There was an error sending your message. Please try again or contact us directly via WhatsApp.");
       }
     } catch (error) {
-      console.error("Network error:", error);
       toast.error('❌ Network error. Please check your connection and try again.');
       setResult("❌ Network error. Please check your connection and try again, or contact us via WhatsApp.");
     } finally {

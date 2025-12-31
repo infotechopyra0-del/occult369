@@ -10,9 +10,9 @@ export interface IPaymentOrder extends Document {
   serviceName: string;
   amount: number;
   currency: string;
-  orderId: string; // Razorpay order ID
-  paymentId?: string; // Razorpay payment ID
-  signature?: string; // Razorpay signature
+  orderId: string; 
+  paymentId?: string; 
+  signature?: string;
   status: 'created' | 'paid' | 'failed';
   razorpayOrderData?: Record<string, unknown>;
   razorpayPaymentData?: Record<string, unknown>;

@@ -50,10 +50,8 @@ export default function ServicesPage() {
           throw new Error('Failed to fetch services');
         }
         const data = await response.json();
-        console.log('DEBUG: /services fetched services:', data.services);
         setServices(data.services || []);
       } catch (error) {
-        console.error('Error fetching services:', error);
         setServices([]);
       } finally {
         setLoading(false);
@@ -63,15 +61,12 @@ export default function ServicesPage() {
   }, []);
 
   const handleBookService = (service: Service) => {
-    console.log('DEBUG: handleBookService called with service:', service);
     if (status === 'unauthenticated') {
       const url = '/login?callbackUrl=' + encodeURIComponent(`/services/checkout?serviceId=${service._id}`);
-      console.log('DEBUG: Unauthenticated, redirecting to', url);
       router.push(url);
       return;
     }
     const checkoutUrl = `/services/checkout?serviceId=${service._id}`;
-    console.log('DEBUG: Authenticated, redirecting to', checkoutUrl);
     router.push(checkoutUrl);
   };
 

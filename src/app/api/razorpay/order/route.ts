@@ -10,8 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Amount should be in paise for Razorpay (e.g., 100 INR = 10000 paise)
-    const amountInPaise = amount ? Number(amount) * 100 : 100 * 100; // fallback 100 INR
+    const amountInPaise = amount ? Number(amount) * 100 : 100 * 100; 
 
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID!,
@@ -47,7 +46,6 @@ export async function POST(req: NextRequest) {
       theme: { color: '#B8860B' },
     });
   } catch (error) {
-    console.error('Razorpay order error:', error);
     return NextResponse.json({ error: 'Failed to create Razorpay order' }, { status: 500 });
   }
 }

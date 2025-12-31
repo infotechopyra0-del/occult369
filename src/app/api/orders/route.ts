@@ -6,7 +6,6 @@ import Order from '@/models/Order';
 import { z } from 'zod';
 import mongoose from 'mongoose';
 
-// Validation schemas
 const getOrdersSchema = z.object({
   page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
   limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 10),
@@ -19,7 +18,6 @@ const getOrdersSchema = z.object({
 });
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -27,8 +25,6 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    // Parse and validate query parameters
     const url = new URL(request.url);
     const queryParams = Object.fromEntries(url.searchParams.entries());
     
@@ -50,8 +46,6 @@ export async function GET(request: NextRequest) {
       sortBy,
       sortOrder
     } = validationResult.data;
-
-    // Validate pagination limits
     if (page < 1 || limit < 1 || limit > 100) {
       return NextResponse.json(
         { error: 'Invalid pagination parameters' },
@@ -60,18 +54,12 @@ export async function GET(request: NextRequest) {
     }
 
     await dbConnect();
-
-    // Build query filters
     const query: Record<string, unknown> = {
       userId: new mongoose.Types.ObjectId(session.user.id)
     };
-
-    // Add status filter
     if (status && status !== 'all') {
       query.paymentStatus = status;
     }
-
-    // Add search filter
     if (search && search.trim()) {
       query.$or = [
         { serviceName: { $regex: search.trim(), $options: 'i' } },
@@ -79,8 +67,6 @@ export async function GET(request: NextRequest) {
         { 'contactDetails.name': { $regex: search.trim(), $options: 'i' } }
       ];
     }
-
-    // Add date range filter
     if (dateFrom || dateTo) {
       const dateQuery: { $gte?: Date; $lte?: Date } = {};
       if (dateFrom) {
@@ -93,12 +79,8 @@ export async function GET(request: NextRequest) {
       }
       query.createdAt = dateQuery;
     }
-
-    // Build sort object
     const sort: Record<string, 1 | -1> = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
-    // Execute query with pagination
     const skip = (page - 1) * limit;
     
     const [orders, totalCount] = await Promise.all([
@@ -110,13 +92,9 @@ export async function GET(request: NextRequest) {
         .lean(),
       Order.countDocuments(query)
     ]);
-
-    // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
-
-    // Format orders with virtual fields
     const formattedOrders = orders.map(order => ({
       ...order,
       _id: order._id.toString(),
@@ -145,7 +123,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Orders API error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch orders. Please try again later.',

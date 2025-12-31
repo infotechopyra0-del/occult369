@@ -368,7 +368,6 @@ export default function ServicesPage() {
         toast.error(error.message || 'Failed to add service');
       }
     } catch (error) {
-      console.error('Error adding service:', error);
       toast.error('Error adding service');
     } finally {
       setSubmitting(false);

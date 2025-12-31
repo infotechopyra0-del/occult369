@@ -4,6 +4,9 @@ export interface ISampleReport extends Document {
   firstName: string;
   birthDate: Date;
   whatsappNumber: string;
+  time: string;
+  email: string;
+  city: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +41,35 @@ const sampleReportSchema = new Schema<ISampleReport>(
         },
         message: 'Please provide a valid WhatsApp number'
       }
+    }
+    ,
+    time: {
+      type: String,
+      required: [true, 'Time is required'],
+      validate: {
+        validator: function(t: string) {
+          return /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
+        },
+        message: 'Please provide a valid time in HH:MM format'
+      }
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      trim: true,
+      lowercase: true,
+      validate: {
+        validator: function(e: string) {
+          return /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(e);
+        },
+        message: 'Please provide a valid email address'
+      }
+    },
+    city: {
+      type: String,
+      required: [true, 'City is required'],
+      trim: true,
+      maxlength: [100, 'City cannot exceed 100 characters']
     }
   },
   {

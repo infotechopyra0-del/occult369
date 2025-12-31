@@ -5,7 +5,6 @@ import connectToDatabase from '@/lib/mongodb';
 import Service from '@/models/Service';
 import { uploadToCloudinary } from '@/lib/cloudinary';
 
-// GET - Fetch all services
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== 'admin') {
@@ -20,14 +19,12 @@ export async function GET() {
       success: true 
     });
   } catch (error) {
-    console.error('Error fetching services:', error);
     return NextResponse.json({ 
       error: 'Failed to fetch services' 
     }, { status: 500 });
   }
 }
 
-// POST - Create new service
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== 'admin') {
@@ -35,7 +32,6 @@ export async function POST(request: Request) {
   }
   try {
     const data = await request.json();
-    // Validate required fields
     const { serviceName, shortDescription, longDescription, price, serviceImage } = data;
     if (!serviceName || !shortDescription || !longDescription || !price || !serviceImage) {
       return NextResponse.json({ 
@@ -45,21 +41,18 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
 
-    // Upload image to Cloudinary if it's base64
     let imageUrl = serviceImage;
     if (serviceImage.startsWith('data:')) {
       try {
         const uploadResult = await uploadToCloudinary(serviceImage, 'occult369/services');
         imageUrl = uploadResult.secure_url;
       } catch (uploadError) {
-        console.error('Image upload failed:', uploadError);
         return NextResponse.json({ 
           error: 'Failed to upload image' 
         }, { status: 400 });
       }
     }
 
-    // Create new service
     const newService = await Service.create({
       serviceName,
       shortDescription,
@@ -77,7 +70,6 @@ export async function POST(request: Request) {
       success: true 
     });
   } catch (error) {
-    console.error('Error creating service:', error);
     if (error instanceof Error && error.name === 'ValidationError') {
       return NextResponse.json({ 
         error: 'Validation failed: ' + error.message 
@@ -89,7 +81,6 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE - Delete service
 export async function DELETE(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== 'admin') {
@@ -119,7 +110,6 @@ export async function DELETE(request: Request) {
       success: true 
     });
   } catch (error) {
-    console.error('Error deleting service:', error);
     return NextResponse.json({ 
       error: 'Failed to delete service' 
     }, { status: 500 });

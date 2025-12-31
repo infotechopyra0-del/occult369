@@ -1,5 +1,4 @@
 'use client';
-// Defensive helper for safe toLocaleString
 function safeLocaleString(val: unknown): string {
   if (typeof val === 'number' && Number.isFinite(val)) {
     try {
@@ -35,11 +34,9 @@ import {
   User
 } from 'lucide-react';
 import Link from 'next/link';
-// BaseCrudService import removed as it's not used
 import { Services } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
 
-// Declare Razorpay for TypeScript
 declare global {
   interface Window {
     Razorpay: {
@@ -73,19 +70,14 @@ const CheckoutPageContent = () => {
   const [errors, setErrors] = useState<Partial<CheckoutFormData>>({});
 
   const serviceId = searchParams.get('serviceId');
-  console.log('DEBUG: /services/checkout serviceId from searchParams =', serviceId);
-
-  // Redirect unauthenticated users to login
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/api/auth/signin?callbackUrl=' + encodeURIComponent(window.location.href));
     }
   }, [status, router]);
 
-  // Fetch service details
   useEffect(() => {
     if (!serviceId) {
-      console.log('DEBUG: No serviceId found in searchParams, redirecting to /services');
       router.push('/services');
       return;
     }
@@ -93,18 +85,14 @@ const CheckoutPageContent = () => {
     const fetchService = async () => {
       try {
         setLoading(true);
-        console.log('DEBUG: /services/checkout fetching serviceId =', serviceId);
         const fetchUrl = `/api/services/${serviceId}`;
-        console.log('DEBUG: Fetching service from', fetchUrl);
         const response = await fetch(fetchUrl);
         if (!response.ok) {
           throw new Error('Service not found');
         }
         const data = await response.json();
-        console.log('DEBUG: /services/checkout fetched service:', data.service);
-        setService(data.service); // Extract service from API response
+        setService(data.service); 
       } catch (error) {
-        console.error('Error fetching service:', error);
         toast.error('Service not found');
         router.push('/services');
       } finally {
@@ -115,7 +103,6 @@ const CheckoutPageContent = () => {
     fetchService();
   }, [serviceId, router]);
 
-  // Pre-fill form with user data if available
   useEffect(() => {
     if (session?.user) {
       setFormData(prev => ({
@@ -126,7 +113,6 @@ const CheckoutPageContent = () => {
     }
   }, [session]);
 
-  // Load Razorpay script
   useEffect(() => {
     const loadRazorpayScript = () => {
       return new Promise((resolve) => {
@@ -141,14 +127,12 @@ const CheckoutPageContent = () => {
     loadRazorpayScript();
   }, []);
 
-  // Handle form input changes
   const handleInputChange = (field: keyof CheckoutFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -157,7 +141,6 @@ const CheckoutPageContent = () => {
     }
   };
 
-  // Validate form
   const validateForm = (): boolean => {
     const newErrors: Partial<CheckoutFormData> = {};
 
@@ -183,14 +166,12 @@ const CheckoutPageContent = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle payment
   const handlePayment = async () => {
     if (!validateForm() || !service) return;
 
     setProcessing(true);
     
     try {
-      // Create Razorpay order
       const orderResponse = await fetch('/api/razorpay/order', {
         method: 'POST',
         headers: {
@@ -201,7 +182,7 @@ const CheckoutPageContent = () => {
           email: formData.email.trim(),
           phone: formData.phone.trim(),
           serviceId: serviceId,
-          amount: service.price // Send the actual price to backend
+          amount: service.price 
         })
       });
 
@@ -211,8 +192,6 @@ const CheckoutPageContent = () => {
       }
 
       const orderData = await orderResponse.json();
-
-      // Configure Razorpay options
       const options = {
         key: orderData.key,
         amount: orderData.amount,
@@ -237,7 +216,6 @@ const CheckoutPageContent = () => {
         }
       };
 
-      // Open Razorpay checkout
       const razorpay = new window.Razorpay(options);
       
       razorpay.on('payment.failed', function (response: Record<string, unknown>) {
@@ -249,13 +227,11 @@ const CheckoutPageContent = () => {
       razorpay.open();
 
     } catch (error) {
-      console.error('Payment error:', error);
       toast.error(error instanceof Error ? error.message : 'Payment failed');
       setProcessing(false);
     }
   };
 
-  // Loading state
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen overflow-x-hidden" style={{backgroundColor: '#F5F5DC'}}>

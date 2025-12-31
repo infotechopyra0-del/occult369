@@ -19,7 +19,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching services:', error);
     return NextResponse.json(
       { error: 'Failed to fetch services' },
       { status: 500 }
@@ -42,15 +41,12 @@ export async function POST(request: NextRequest) {
       category 
     } = body;
 
-    // Validate required fields
     if (!serviceName || !shortDescription || !price) {
       return NextResponse.json(
         { error: 'Service name, description, and price are required' },
         { status: 400 }
       );
     }
-
-    // Create new service
     const service = new Service({
       serviceName: serviceName.trim(),
       shortDescription: shortDescription.trim(),
@@ -76,8 +72,6 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error creating service:', error);
-    
     if (error instanceof Error) {
       return NextResponse.json(
         { error: error.message },

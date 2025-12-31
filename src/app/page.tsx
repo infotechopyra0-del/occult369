@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Image } from '@/components/ui/image';
 import { Star, Sparkles, Moon, Sun } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Services, Testimonials } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
 import { toast } from 'sonner'; 
@@ -18,13 +18,17 @@ export default function HomePage() {
   const [formData, setFormData] = useState({
     firstName: '',
     birthDate: '',
-    whatsappNumber: ''
+    whatsappNumber: '',
+    time: '',
+    email: '',
+    city: ''
   });
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 300], [0, -50]);
   const y2 = useTransform(scrollY, [0, 300], [0, 25]);
 
-  // Form input change handler
+  const isMountedRef = useRef(false);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -35,18 +39,17 @@ export default function HomePage() {
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsSubmitting(true);
-    setResult("Sending....");
+    if (isMountedRef.current) {
+      setIsSubmitting(true);
+      setResult("Sending....");
+    }
     
     try {
-      // Validate form data
-      if (!formData.firstName || !formData.birthDate || !formData.whatsappNumber) {
+      if (!formData.firstName || !formData.birthDate || !formData.time || !formData.whatsappNumber || !formData.email || !formData.city) {
         toast.error('All fields are required');
-        setResult('Error: All fields are required');
+        if (isMountedRef.current) setResult('Error: All fields are required');
         return;
       }
-
-      // Save to database using SampleReport model
       const response = await fetch('/api/sample-reports', {
         method: 'POST',
         headers: {
@@ -55,7 +58,10 @@ export default function HomePage() {
         body: JSON.stringify({
           firstName: formData.firstName.trim(),
           birthDate: formData.birthDate,
-          whatsappNumber: formData.whatsappNumber.trim()
+          time: formData.time,
+          whatsappNumber: formData.whatsappNumber.trim(),
+          email: formData.email.trim(),
+          city: formData.city.trim()
         })
       });
 
@@ -63,59 +69,65 @@ export default function HomePage() {
 
       if (response.ok) {
         toast.success('🌟 Sample Report Request Saved Successfully! We will contact you soon.');
-        setResult('Success: Sample Report Request Saved Successfully!');
-        // Reset form
-        setFormData({
-          firstName: '',
-          birthDate: '',
-          whatsappNumber: ''
-        });
+        if (isMountedRef.current) {
+          setResult('Success: Sample Report Request Saved Successfully!');
+          // Reset form
+          setFormData({
+            firstName: '',
+            birthDate: '',
+            whatsappNumber: '',
+            time: '',
+            email: '',
+            city: ''
+          });
+        }
       } else {
         toast.error(data.error || 'Failed to save report request');
-        setResult('Error: ' + (data.error || 'Failed to save report request'));
+        if (isMountedRef.current) setResult('Error: ' + (data.error || 'Failed to save report request'));
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
       toast.error('Failed to save report request. Please try again.');
-      setResult('Error: Failed to save report request');
+      if (isMountedRef.current) setResult('Error: Failed to save report request');
     } finally {
-      setIsSubmitting(false);
+      if (isMountedRef.current) setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     const fetchData = async () => {
       try {
-        console.log('Fetching services and testimonials...');
         const [servicesResponse, testimonialsResponse] = await Promise.all([
           fetch('/api/services'),
           fetch('/api/testimonials')
         ]);
-        
-        console.log('Services response:', servicesResponse.status);
-        console.log('Testimonials response:', testimonialsResponse.status);
-        
         if (servicesResponse.ok && testimonialsResponse.ok) {
           const servicesData = await servicesResponse.json();
           const testimonialsData = await testimonialsResponse.json();
-          
-          console.log('Services data:', servicesData);
-          console.log('Testimonials data:', testimonialsData);
-          
-          setServices(servicesData.services?.slice(0, 3) || []);
-          setTestimonials(testimonialsData.testimonials?.slice(0, 3) || []);
+          if (isMountedRef.current) {
+            setServices(servicesData.services?.slice(0, 3) || []);
+            setTestimonials(testimonialsData.testimonials?.slice(0, 3) || []);
+          }
         } else {
-          console.log('API responses not OK');
+          if (isMountedRef.current) {
+            setServices([]);
+            setTestimonials([]);
+          }
+        }
+      } catch (error) {
+        if (isMountedRef.current) {
           setServices([]);
           setTestimonials([]);
         }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setServices([]);
-        setTestimonials([]);
       }
     };
+
     fetchData();
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   return (
@@ -532,7 +544,7 @@ export default function HomePage() {
               <Card className="mb-8 border-[#B8860B]/20">
                 <CardContent className="p-6">
                   <h3 className="text-xl font-heading font-bold text-[#301934] mb-4">
-                    🌟 Get Your Free Sample Report
+                    🌟 Get Your Report
                   </h3>
                   <form onSubmit={onSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -560,6 +572,16 @@ export default function HomePage() {
                           disabled={isSubmitting}
                           className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
                         />
+                        <label className="block text-sm font-medium text-[#301934] mb-2 mt-3">Time</label>
+                        <input
+                          type="time"
+                          name="time"
+                          value={formData.time}
+                          onChange={handleInputChange}
+                          required
+                          disabled={isSubmitting}
+                          className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
+                        />
                       </div>
                     </div>
                     <div>
@@ -575,6 +597,35 @@ export default function HomePage() {
                         className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
                       />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-[#301934] mb-2">Email Id</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="you@example.com"
+                          required
+                          disabled={isSubmitting}
+                          className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#301934] mb-2">City</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          placeholder="City"
+                          required
+                          disabled={isSubmitting}
+                          className="w-full px-3 py-2 border border-[#B8860B]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B]/50 bg-[#F5F5DC]/50 disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
                     <Button 
                       type="submit" 
                       disabled={isSubmitting}
@@ -586,7 +637,7 @@ export default function HomePage() {
                           Submitting...
                         </>
                       ) : (
-                        '📱 Send My Sample Report'
+                        '📱 Send My Report'
                       )}
                     </Button>
                     {result && (

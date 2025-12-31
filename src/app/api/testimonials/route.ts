@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 
-// Since there's no Testimonial model, I'll create a simple response for now
-// You can create a Testimonial model later if needed
 
 export async function GET() {
-  try {
-    // For now, return empty array or mock data
-    // Later you can create a Testimonial model and fetch from database
-    
+  await dbConnect();
+  try { 
     const mockTestimonials = [
       {
         _id: "1",
@@ -45,7 +41,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Error fetching testimonials:', error);
     return NextResponse.json(
       { error: 'Failed to fetch testimonials' },
       { status: 500 }

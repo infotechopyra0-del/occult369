@@ -5,7 +5,6 @@ import connectToDatabase from '@/lib/mongodb';
 import User from '@/models/User';
 import { z } from 'zod';
 
-// Validation schema for profile updates
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name must be less than 50 characters'),
   phone: z.string().optional().refine((phone) => {
@@ -15,7 +14,6 @@ const profileSchema = z.object({
   profileImage: z.string().url().optional()
 });
 
-// GET - Fetch user profile
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -38,7 +36,6 @@ export async function GET() {
       );
     }
 
-    // Ensure default image is set if none exists
     if (!user.profileImage) {
       user.profileImage = '/images/default.jpg';
       await user.save();
@@ -46,7 +43,6 @@ export async function GET() {
 
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
-    console.error('Profile fetch error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -54,7 +50,6 @@ export async function GET() {
   }
 }
 
-// PUT - Update user profile
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -67,8 +62,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    
-    // Validate input
     const validationResult = profileSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
@@ -106,7 +99,6 @@ export async function PUT(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Profile update error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

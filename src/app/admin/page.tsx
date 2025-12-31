@@ -1,4 +1,3 @@
-// This file redirects /admin to /admin/dashboard
 
 import { redirect } from 'next/navigation';
 

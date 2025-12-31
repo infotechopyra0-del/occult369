@@ -45,7 +45,6 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Error deleting sample report:', error);
     return NextResponse.json(
       { error: 'Failed to delete sample report' },
       { status: 500 }
@@ -93,7 +92,6 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching sample report:', error);
     return NextResponse.json(
       { error: 'Failed to fetch sample report' },
       { status: 500 }

@@ -69,7 +69,6 @@ export default function SampleReportsPage() {
       const data = await response.json();
       setSampleReports(data.sampleReports || []);
     } catch (error) {
-      console.error('Error fetching sample reports:', error);
       toast.error('Failed to load sample reports');
     } finally {
       setLoading(false);
@@ -93,7 +92,6 @@ export default function SampleReportsPage() {
       setShowDeleteDialog(false);
       setReportToDelete(null);
     } catch (error) {
-      console.error('Error deleting sample report:', error);
       toast.error('Failed to delete sample report');
     }
   };

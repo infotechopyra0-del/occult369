@@ -67,32 +67,22 @@ interface OrdersResponse {
 const OrdersPage = () => {
   const { status } = useSession();
   const router = useRouter();
-  
-  // State management
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Search and filtering
   const [searchTerm] = useState('');
   const [statusFilter] = useState('all');
   const [serviceFilter] = useState('all');
   const [sortBy] = useState('createdAt');
   const [sortOrder] = useState<'asc' | 'desc'>('desc');
-  
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
   const itemsPerPage = 10;
-
-  // Authentication check
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/api/auth/signin');
     }
   }, [status, router]);
-
-  // Fetch orders function
   const fetchOrders = useCallback(async () => {
     if (status !== 'authenticated') return;
     
@@ -118,8 +108,6 @@ const OrdersPage = () => {
       }
 
       const data: OrdersResponse = await response.json();
-      
-      // Handle case where API returns error
       if (data.error) {
         throw new Error(data.error);
       }
@@ -129,19 +117,16 @@ const OrdersPage = () => {
       setTotalOrders(data.pagination?.total || 0);
       
     } catch (err) {
-      console.error('Error fetching orders:', err);
       toast.error('Failed to load orders');
     } finally {
       setLoading(false);
     }
   }, [status, currentPage, searchTerm, statusFilter, serviceFilter, sortBy, sortOrder]);
 
-  // Fetch orders on component mount and dependency changes
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Search debouncing
   useEffect(() => {
     const delayedSearch = setTimeout(() => {
       setCurrentPage(1);
@@ -151,7 +136,6 @@ const OrdersPage = () => {
     return () => clearTimeout(delayedSearch);
   }, [searchTerm, fetchOrders]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [statusFilter, serviceFilter, sortBy, sortOrder]);

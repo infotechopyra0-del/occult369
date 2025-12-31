@@ -38,7 +38,6 @@ export const authOptions: NextAuthOptions = {
             profileImage: user.profileImage
           };
         } catch (error) {
-          console.error('Authentication error:', error);
           throw new Error('Authentication failed');
         }
       }
@@ -46,27 +45,24 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60, 
   },
   jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
     async signIn() {
-      return true; // Allow sign in
+      return true; 
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      // Always allow the redirect - we'll handle admin redirect in the login page
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user, trigger, session }: { token: any; user?: { id?: string; role?: string; profileImage?: string }; trigger?: string; session?: any }) {
       if (user) {
         token.role = user.role;
         token.profileImage = user.profileImage || '/images/default.jpg';
       }
       
-      // Handle session updates - fetch fresh data from database
       if (trigger === 'update' && session) {
         try {
           await dbConnect();
@@ -78,11 +74,8 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
         }
       }
-      
-      // Always fetch fresh user data on token refresh
       if (token.email && !user) {
         try {
           await dbConnect();
@@ -93,14 +86,11 @@ export const authOptions: NextAuthOptions = {
             token.phone = dbUser.phone;
             token.role = dbUser.role;
           }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+        } catch (error) {   
         }
       }
-      
       return token;
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: { session: any; token: any & { role?: string; profileImage?: string; phone?: string } }) {
       if (token) {
         session.user.id = token.sub!;

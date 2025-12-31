@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import Contact from '@/models/Contact';
 
-// GET - Fetch all contacts for admin
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== 'admin') {
@@ -19,14 +18,12 @@ export async function GET() {
       success: true 
     });
   } catch (error) {
-    console.error('Error fetching contacts:', error);
     return NextResponse.json({ 
       error: 'Failed to fetch contacts' 
     }, { status: 500 });
   }
 }
 
-// DELETE - Delete contact
 export async function DELETE(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session || session.user?.role !== 'admin') {
@@ -45,7 +42,6 @@ export async function DELETE(request: Request) {
     }
     return NextResponse.json({ message: 'Contact deleted successfully', success: true });
   } catch (error) {
-    console.error('Error deleting contact:', error);
     return NextResponse.json({ error: 'Failed to delete contact' }, { status: 500 });
   }
 }

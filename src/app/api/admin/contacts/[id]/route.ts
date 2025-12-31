@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Contact from '@/models/Contact';
 
-// GET - Fetch single contact
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -24,14 +23,12 @@ export async function GET(
       success: true 
     });
   } catch (error) {
-    console.error('Error fetching contact:', error);
     return NextResponse.json({ 
       error: 'Failed to fetch contact' 
     }, { status: 500 });
   }
 }
 
-// PUT - Update contact status
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -60,14 +57,12 @@ export async function PUT(
       success: true 
     });
   } catch (error) {
-    console.error('Error updating contact:', error);
     return NextResponse.json({ 
       error: 'Failed to update contact' 
     }, { status: 500 });
   }
 }
 
-// DELETE - Delete contact
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -89,7 +84,6 @@ export async function DELETE(
       success: true 
     });
   } catch (error) {
-    console.error('Error deleting contact:', error);
     return NextResponse.json({ 
       error: 'Failed to delete contact' 
     }, { status: 500 });

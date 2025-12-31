@@ -15,14 +15,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Find orders by email and phone for verification
     const orders = await Order.find({
       'contactDetails.email': email.toLowerCase().trim(),
       'contactDetails.phone': phone.trim()
     })
     .sort({ createdAt: -1 })
-    .limit(20) // Limit to last 20 orders for security
+    .limit(20) 
     .lean();
 
     return NextResponse.json({
@@ -31,7 +29,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching orders by email:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

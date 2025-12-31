@@ -52,8 +52,6 @@ export default function ProfilePage() {
     name: '',
     phone: ''
   });
-
-  // Fetch user profile
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
@@ -70,7 +68,6 @@ export default function ProfilePage() {
         toast.error(data.error || 'Failed to fetch profile');
       }
     } catch (error) {
-      console.error('Profile fetch error:', error);
       toast.error('Failed to load profile');
     } finally {
       setIsLoading(false);
@@ -116,7 +113,6 @@ export default function ProfilePage() {
         toast.error(data.error || 'Failed to update profile');
       }
     } catch (error) {
-      console.error('Profile update error:', error);
       toast.error('Failed to update profile');
     } finally {
       setSaving(false);
@@ -141,7 +137,6 @@ export default function ProfilePage() {
       const data = await response.json();
       
       if (response.ok) {
-        // Update profile with new image
         const updateResponse = await fetch('/api/profile', {
           method: 'PUT',
           headers: {
@@ -157,19 +152,12 @@ export default function ProfilePage() {
         if (updateResponse.ok) {
           const updatedData = await updateResponse.json();
           setUserProfile(updatedData.user);
-          
-          // Update the session with new profile image
           const sessionUpdate = await update({ 
             name: updatedData.user.name,
             profileImage: data.imageUrl,
             trigger: 'update'
           });
-          
-          console.log('Session updated:', sessionUpdate);
-          
           toast.success('Profile picture updated successfully');
-          
-          // Force navbar refresh by reloading after a short delay
           setTimeout(() => {
             window.location.reload();
           }, 1000);
@@ -178,7 +166,6 @@ export default function ProfilePage() {
         toast.error(data.error || 'Failed to upload image');
       }
     } catch (error) {
-      console.error('Image upload error:', error);
       toast.error('Failed to upload image');
     } finally {
       setIsUploading(false);
@@ -193,7 +180,6 @@ export default function ProfilePage() {
       await signOut({ redirect: true, callbackUrl: '/' });
       toast.success('Logged out successfully');
     } catch (error) {
-      console.error('Logout error:', error);
       toast.error('Error logging out');
     }
   };

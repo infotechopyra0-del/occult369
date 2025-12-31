@@ -10,7 +10,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check authentication
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -18,20 +17,14 @@ export async function GET(
         { status: 401 }
       );
     }
-
     const { id } = await params;
-
-    // Validate order ID format
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: 'Invalid order ID format.' },
         { status: 400 }
       );
     }
-
     await connectToDatabase();
-
-    // Find order with security check - only allow users to view their own orders
     const order = await Order.findOne({
       _id: new mongoose.Types.ObjectId(id),
       userId: new mongoose.Types.ObjectId(session.user.id)
@@ -46,7 +39,6 @@ export async function GET(
       );
     }
 
-    // Format order with additional details
     const formattedOrder = {
       ...order,
       _id: order._id.toString(),
@@ -68,7 +60,6 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Order details API error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch order details. Please try again later.',
@@ -79,7 +70,6 @@ export async function GET(
   }
 }
 
-// Helper functions
 function getStatusColor(status: string): string {
   const colors = {
     pending: 'yellow',
