@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Search, 
-  Download, 
   Eye, 
   Edit, 
   CheckCircle, 
@@ -23,7 +21,6 @@ import {
   Star,
   Sparkles,
   Package,
-  TrendingUp
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import AdminLayout from '@/components/AdminLayout';
@@ -59,7 +56,6 @@ interface Order {
 }
 
 export default function OrdersPage() {
-  // Modal state
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);

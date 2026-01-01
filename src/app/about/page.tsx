@@ -76,6 +76,7 @@ export default function AboutPage() {
                 src="/images/ElenaStarweaver.png"
                 alt="Elena Starweaver, Master Numerologist and founder of Occult369"
                 width={600}
+                height={400}
                 className="rounded-lg shadow-2xl"
               />
               <div className="absolute -bottom-6 -right-6 bg-[#B8860B] text-[#301934] p-6 rounded-lg">
@@ -169,6 +170,7 @@ export default function AboutPage() {
                 src="/images/MysticalCards.png"
                 alt="Sacred numerology practice with cosmic symbols and calculations"
                 width={600}
+                height={400}
                 className="rounded-lg shadow-2xl"
               />
             </motion.div>
@@ -269,6 +271,7 @@ export default function AboutPage() {
                       src={member.image}
                       alt={member.name}
                       width={200}
+                      height={200}
                       className="w-32 h-32 rounded-full mx-auto mb-6 object-cover"
                     />
                     <h3 className="text-xl font-heading font-bold text-[#301934] mb-2">

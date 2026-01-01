@@ -24,7 +24,6 @@ const sampleReportSchema = new Schema<ISampleReport>(
       required: [true, 'Birth date is required'],
       validate: {
         validator: function(date: Date) {
-          // Check if the date is not in the future
           return date <= new Date();
         },
         message: 'Birth date cannot be in the future'

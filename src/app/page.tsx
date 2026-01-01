@@ -4,17 +4,41 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Image } from '@/components/ui/image';
-import { Star, Sparkles, Moon, Sun } from 'lucide-react';
+import { Star, Sparkles, Moon, Sun, X, CheckCircle } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Services, Testimonials } from '@/entities';
 import ResponsiveNav from '@/components/ResponsiveNav';
-import { toast } from 'sonner'; 
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+
+// Razorpay type declaration
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+} 
  
 export default function HomePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [services, setServices] = useState<Services[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonials[]>([]);
   const [result, setResult] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [finalPrice, setFinalPrice] = useState(999);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState({
+    services: false,
+    testimonials: false
+  });
   const [formData, setFormData] = useState({
     firstName: '',
     birthDate: '',
@@ -37,92 +61,201 @@ export default function HomePage() {
     }));
   };
 
+  const handleCouponApply = () => {
+    if (couponCode === 'GOFLIN777') {
+      setCouponApplied(true);
+      setFinalPrice(99);
+      toast.success('🎉 Coupon applied successfully! Price reduced to ₹99');
+    } else {
+      toast.error('❌ Invalid coupon code');
+      setCouponCode('');
+    }
+  };
+
+  const resetCoupon = () => {
+    setCouponCode('');
+    setCouponApplied(false);
+    setFinalPrice(999);
+  };
+
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isMountedRef.current) {
-      setIsSubmitting(true);
-      setResult("Sending....");
+    
+    // Check if user is logged in
+    if (status === 'loading') {
+      toast.error('Loading... Please wait');
+      return;
     }
     
+    if (!session) {
+      toast.error('Please login first to get your report');
+      router.push('/login');
+      return;
+    }
+    
+    // Validate form data
+    if (!formData.firstName || !formData.birthDate || !formData.time || !formData.whatsappNumber || !formData.email || !formData.city) {
+      toast.error('All fields are required');
+      return;
+    }
+    
+    // Show payment dialog
+    setShowPaymentDialog(true);
+  };
+
+  const handlePayment = async () => {
     try {
-      if (!formData.firstName || !formData.birthDate || !formData.time || !formData.whatsappNumber || !formData.email || !formData.city) {
-        toast.error('All fields are required');
-        if (isMountedRef.current) setResult('Error: All fields are required');
-        return;
-      }
-      const response = await fetch('/api/sample-reports', {
+      setIsProcessingPayment(true);
+      const orderResponse = await fetch('/api/razorpay/order', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: formData.firstName.trim(),
-          birthDate: formData.birthDate,
-          time: formData.time,
-          whatsappNumber: formData.whatsappNumber.trim(),
-          email: formData.email.trim(),
-          city: formData.city.trim()
-        })
+          name: formData.firstName,
+          email: formData.email,
+          phone: formData.whatsappNumber,
+          serviceId: 'numerology-report-001', // Fixed service ID
+          amount: finalPrice, // Amount in rupees
+          currency: 'INR',
+        }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('🌟 Sample Report Request Saved Successfully! We will contact you soon.');
-        if (isMountedRef.current) {
-          setResult('Success: Sample Report Request Saved Successfully!');
-          // Reset form
-          setFormData({
-            firstName: '',
-            birthDate: '',
-            whatsappNumber: '',
-            time: '',
-            email: '',
-            city: ''
-          });
-        }
-      } else {
-        toast.error(data.error || 'Failed to save report request');
-        if (isMountedRef.current) setResult('Error: ' + (data.error || 'Failed to save report request'));
+      if (!orderResponse.ok) {
+        throw new Error('Failed to create order');
       }
+
+      const orderData = await orderResponse.json();
+
+      // Razorpay options
+      const options = {
+        key: orderData.key,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: orderData.name,
+        description: orderData.description,
+        order_id: orderData.orderId,
+        handler: async (response: any) => {
+          try {
+            // Save order to database
+            const saveOrderResponse = await fetch('/api/orders', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                ...formData,
+                totalAmount: finalPrice,
+                discountAmount: couponApplied ? 900 : 0,
+                couponCode: couponApplied ? 'GOFLIN777' : '',
+                razorpayOrderId: orderData.orderId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                paymentStatus: 'completed'
+              }),
+            });
+
+            if (saveOrderResponse.ok) {
+              toast.success('🎉 Payment successful! Your personalized numerology report will be sent to your WhatsApp shortly.');
+              setShowPaymentDialog(false);
+              setFormData({
+                firstName: '',
+                birthDate: '',
+                whatsappNumber: '',
+                time: '',
+                email: '',
+                city: ''
+              });
+              resetCoupon();
+            } else {
+              throw new Error('Failed to save order');
+            }
+          } catch (error) {
+            console.error('Error saving order:', error);
+            toast.error('Payment successful but failed to save order. Please contact support.');
+          }
+        },
+        prefill: orderData.prefill,
+        theme: orderData.theme,
+      };
+
+      // @ts-ignore
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        toast.error('Payment failed: ' + response.error.description);
+        setIsProcessingPayment(false);
+      });
+      
+      rzp.open();
+      setIsProcessingPayment(false);
     } catch (error) {
-      toast.error('Failed to save report request. Please try again.');
-      if (isMountedRef.current) setResult('Error: Failed to save report request');
-    } finally {
-      if (isMountedRef.current) setIsSubmitting(false);
+      console.error('Payment error:', error);
+      toast.error('Failed to initiate payment. Please try again.');
+      setIsProcessingPayment(false);
     }
   };
 
   useEffect(() => {
     isMountedRef.current = true;
+    
+    // Load Razorpay script
+    const loadRazorpayScript = () => {
+      if (typeof window !== 'undefined' && !window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    };
 
     const fetchData = async () => {
       try {
+        setIsLoading(true);
+        setDataLoaded({
+          services: false,
+          testimonials: false
+        });
+        
         const [servicesResponse, testimonialsResponse] = await Promise.all([
           fetch('/api/services'),
           fetch('/api/testimonials')
         ]);
+        
         if (servicesResponse.ok && testimonialsResponse.ok) {
           const servicesData = await servicesResponse.json();
           const testimonialsData = await testimonialsResponse.json();
+          
           if (isMountedRef.current) {
-            setServices(servicesData.services?.slice(0, 3) || []);
-            setTestimonials(testimonialsData.testimonials?.slice(0, 3) || []);
+            // Load services first with delay for smooth effect
+            setTimeout(() => {
+              setServices(servicesData.services?.slice(0, 3) || []);
+              setDataLoaded(prev => ({ ...prev, services: true }));
+            }, 200);
+            
+            // Load testimonials after with stagger effect
+            setTimeout(() => {
+              setTestimonials(testimonialsData.testimonials?.slice(0, 3) || []);
+              setDataLoaded(prev => ({ ...prev, testimonials: true }));
+              setIsLoading(false);
+            }, 400);
           }
         } else {
           if (isMountedRef.current) {
             setServices([]);
             setTestimonials([]);
+            setIsLoading(false);
           }
         }
       } catch (error) {
+        console.error('Error fetching data:', error);
         if (isMountedRef.current) {
           setServices([]);
           setTestimonials([]);
+          setIsLoading(false);
         }
       }
     };
 
+    loadRazorpayScript();
     fetchData();
 
     return () => {
@@ -628,13 +761,13 @@ export default function HomePage() {
                     </div>
                     <Button 
                       type="submit" 
-                      disabled={isSubmitting}
+                      disabled={status === 'loading'}
                       className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 py-3 disabled:opacity-50"
                     >
-                      {isSubmitting ? (
+                      {status === 'loading' ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#301934] mr-2"></div>
-                          Submitting...
+                          Loading...
                         </>
                       ) : (
                         '📱 Send My Report'
@@ -856,52 +989,76 @@ export default function HomePage() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {services.map((service, index) => (
-              <motion.div
-                key={service._id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full border-[#B8860B]/20 hover:border-[#B8860B]/40 transition-colors">
-                  <CardContent className="p-8 text-center">
-                    {service.serviceImage ? (
-                      <Image
-                        src={service.serviceImage}
-                        alt={service.serviceName || 'Service'}
-                        width={300}
-                        className="w-full h-48 object-cover rounded-lg mb-6"
-                      />
-                    ) : (
-                      <div className="w-full h-48 bg-gradient-to-br from-[#301934]/20 to-[#B8860B]/20 rounded-lg mb-6 flex items-center justify-center">
-                        <div className="text-center">
-                          <Star className="w-16 h-16 text-[#B8860B] mx-auto mb-2" />
-                          <div className="text-sm font-paragraph text-[#301934]/60">Sacred Reading</div>
+            {!dataLoaded.services ? (
+              // Skeleton loading for services
+              [...Array(3)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <Card className="h-full border-[#B8860B]/20">
+                    <CardContent className="p-8 text-center">
+                      <div className="w-full h-48 bg-gray-200 rounded-lg mb-6"></div>
+                      <div className="h-8 bg-gray-200 rounded mb-4 mx-auto w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded mb-6 w-2/3 mx-auto"></div>
+                      <div className="h-8 bg-gray-200 rounded mb-6 w-1/3 mx-auto"></div>
+                      <div className="h-10 bg-gray-200 rounded"></div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))
+            ) : services.length > 0 ? (
+              services.map((service, index) => (
+                <motion.div
+                  key={service._id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="h-full border-[#B8860B]/20 hover:border-[#B8860B]/40 transition-colors">
+                    <CardContent className="p-8 text-center">
+                      {service.serviceImage ? (
+                        <Image
+                          src={service.serviceImage}
+                          alt={service.serviceName || 'Service'}
+                          width={300}
+                          height={192}
+                          className="w-full h-48 object-cover rounded-lg mb-6"
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-[#301934]/20 to-[#B8860B]/20 rounded-lg mb-6 flex items-center justify-center">
+                          <div className="text-center">
+                            <Star className="w-16 h-16 text-[#B8860B] mx-auto mb-2" />
+                            <div className="text-sm font-paragraph text-[#301934]/60">Sacred Reading</div>
+                          </div>
                         </div>
+                      )}
+                      <h3 className="text-2xl font-heading font-bold text-[#301934] mb-4">
+                        {service.serviceName}
+                      </h3>
+                      <p className="text-[#301934]/80 font-paragraph mb-6">
+                        {service.shortDescription}
+                      </p>
+                      <div className="text-2xl font-heading font-bold text-[#B8860B] mb-6">
+                        ₹{service.price.toLocaleString('en-IN')}
                       </div>
-                    )}
-                    <h3 className="text-2xl font-heading font-bold text-[#301934] mb-4">
-                      {service.serviceName}
-                    </h3>
-                    <p className="text-[#301934]/80 font-paragraph mb-6">
-                      {service.shortDescription}
-                    </p>
-                    <div className="text-2xl font-heading font-bold text-[#B8860B] mb-6">
-                      ₹{service.price.toLocaleString('en-IN')}
-                    </div>
-                    <Link 
-                      href="/services"
-                      className="block w-full"
-                    >
-                      <Button className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 font-semibold">
-                        Buy Now
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                      <Link 
+                        href="/services"
+                        className="block w-full"
+                      >
+                        <Button className="w-full bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 font-semibold">
+                          Buy Now
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Star className="w-16 h-16 text-[#B8860B]/50 mx-auto mb-4" />
+                <p className="text-[#301934]/60 font-paragraph">No services available at the moment</p>
+              </div>
+            )}
           </div>
 
           <motion.div 
@@ -1008,53 +1165,88 @@ export default function HomePage() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={testimonial._id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full border-[#B8860B]/20 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#B8860B]/20 to-transparent"></div>
-                  <CardContent className="p-8">
-                    <div className="flex mb-4">
-                      {[...Array(testimonial.rating || 5)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-[#B8860B] text-[#B8860B]" />
-                      ))}
-                    </div>
-                    <p className="text-[#301934]/80 font-paragraph mb-6 italic">
-                      &ldquo;{testimonial.testimonialText}&rdquo;
-                    </p>
-                    <div className="flex items-center">
-                      {testimonial.customerPhoto ? (
-                        <Image
-                          src={testimonial.customerPhoto}
-                          alt={testimonial.customerName || 'Customer'}
-                          width={48}
-                          className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-[#B8860B]/20"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#B8860B]/20 to-[#301934]/20 mr-4 flex items-center justify-center">
-                          <Star className="w-6 h-6 text-[#B8860B]" />
+            {!dataLoaded.testimonials ? (
+              // Skeleton loading for testimonials
+              [...Array(3)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <Card className="h-full border-[#B8860B]/20">
+                    <CardContent className="p-8">
+                      <div className="flex mb-4 space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div key={i} className="w-5 h-5 bg-gray-200 rounded"></div>
+                        ))}
+                      </div>
+                      <div className="space-y-2 mb-6">
+                        <div className="h-4 bg-gray-200 rounded"></div>
+                        <div className="h-4 bg-gray-200 rounded w-4/5"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/5"></div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full mr-4"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 rounded mb-2 w-2/3"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                         </div>
-                      )}
-                      <div>
-                        <div className="font-heading font-semibold text-[#301934]">
-                          {testimonial.customerName}
-                        </div>
-                        {testimonial.serviceMentioned && (
-                          <div className="text-sm text-[#301934]/60">
-                            {testimonial.serviceMentioned}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))
+            ) : testimonials.length > 0 ? (
+              testimonials.map((testimonial, index) => (
+                <motion.div
+                  key={testimonial._id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="h-full border-[#B8860B]/20 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#B8860B]/20 to-transparent"></div>
+                    <CardContent className="p-8">
+                      <div className="flex mb-4">
+                        {[...Array(testimonial.rating || 5)].map((_, i) => (
+                          <Star key={i} className="w-5 h-5 fill-[#B8860B] text-[#B8860B]" />
+                        ))}
+                      </div>
+                      <p className="text-[#301934]/80 font-paragraph mb-6 italic">
+                        &ldquo;{testimonial.testimonialText}&rdquo;
+                      </p>
+                      <div className="flex items-center">
+                        {testimonial.customerPhoto ? (
+                          <Image
+                            src={testimonial.customerPhoto}
+                            alt={testimonial.customerName || 'Customer'}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 rounded-full mr-4 object-cover border-2 border-[#B8860B]/20"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#B8860B]/20 to-[#301934]/20 mr-4 flex items-center justify-center">
+                            <Star className="w-6 h-6 text-[#B8860B]" />
                           </div>
                         )}
+                        <div>
+                          <div className="font-heading font-semibold text-[#301934]">
+                            {testimonial.customerName}
+                          </div>
+                          {testimonial.serviceMentioned && (
+                            <div className="text-sm text-[#301934]/60">
+                              {testimonial.serviceMentioned}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Star className="w-16 h-16 text-[#B8860B]/50 mx-auto mb-4" />
+                <p className="text-[#301934]/60 font-paragraph">No testimonials available at the moment</p>
+              </div>
+            )}
           </div>
 
           <motion.div 
@@ -1524,6 +1716,200 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="w-[95vw] max-w-md mx-auto bg-[#F5F5DC] border-[#B8860B]/30 !z-[99999] sm:max-w-lg md:max-w-xl shadow-2xl">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-xl sm:text-2xl font-heading font-bold text-[#301934] text-center">
+              🌟 Complete Your Order
+            </DialogTitle>
+            <p className="text-xs sm:text-sm text-[#301934]/70 text-center">
+              Review your details and proceed with payment
+            </p>
+          </DialogHeader>
+          
+          <div 
+            className="space-y-4 sm:space-y-6 px-2 sm:px-4 pb-4" 
+            style={{
+              maxHeight: 'calc(90vh - 120px)', 
+              overflowY: 'auto', 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none'
+            }}
+          >
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+            {/* Order Summary */}
+            <Card className="border-[#B8860B]/20">
+              <CardContent className="p-3 sm:p-4">
+                <h3 className="font-semibold text-[#301934] mb-2 sm:mb-3 font-heading flex items-center gap-2 text-sm sm:text-base">
+                  📋 Order Details
+                </h3>
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[#301934]/70">Name:</span>
+                    <span className="font-medium text-[#301934] text-right">{formData.firstName}</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span className="text-[#301934]/70">Birth Date:</span>
+                    <span className="font-medium text-[#301934] text-right">{formData.birthDate}</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span className="text-[#301934]/70">Time:</span>
+                    <span className="font-medium text-[#301934] text-right">{formData.time}</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span className="text-[#301934]/70">WhatsApp:</span>
+                    <span className="font-medium text-[#301934] text-right break-all">{formData.whatsappNumber}</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span className="text-[#301934]/70">Email:</span>
+                    <span className="font-medium text-[#301934] text-right break-all text-xs">{formData.email}</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span className="text-[#301934]/70">City:</span>
+                    <span className="font-medium text-[#301934] text-right">{formData.city}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Price & Coupon Section */}
+            <Card className="border-[#B8860B]/20">
+              <CardContent className="p-3 sm:p-4">
+                <h3 className="font-semibold text-[#301934] mb-2 sm:mb-3 font-heading flex items-center gap-2 text-sm sm:text-base">
+                  💰 Pricing Details
+                </h3>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm sm:text-lg font-medium text-[#301934]">Personalized Report:</span>
+                    <div className="text-right">
+                      {couponApplied && (
+                        <div className="text-xs sm:text-sm text-[#301934]/60 line-through">₹999</div>
+                      )}
+                      <span className="text-lg sm:text-2xl font-bold text-[#B8860B] font-heading">
+                        ₹{finalPrice}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Coupon Section */}
+                  <div className="border-t border-[#B8860B]/20 pt-3 sm:pt-4">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <span className="font-medium text-[#301934] text-sm sm:text-base">🎫 Have a coupon?</span>
+                      {couponApplied && (
+                        <Badge className="bg-green-100 text-green-800 border-green-200 animate-pulse text-xs">
+                          ✅ GOFLIN777 Applied
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {!couponApplied ? (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                            placeholder="Enter coupon code"
+                            className="border-[#B8860B]/30 bg-[#F5F5DC]/50 focus:ring-[#B8860B]/50 text-sm"
+                            maxLength={15}
+                          />
+                          <Button 
+                            onClick={handleCouponApply}
+                            className="bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 whitespace-nowrap text-sm px-3 sm:px-4"
+                            disabled={!couponCode}
+                          >
+                            Apply
+                          </Button>
+                        </div>
+                        
+                        {/* Coupon Hint */}
+                        <div className="p-2 sm:p-3 bg-gradient-to-r from-[#B8860B]/10 to-[#A020F0]/10 rounded border border-[#B8860B]/20">
+                          <p className="text-xs text-[#301934]/70 text-center leading-relaxed">
+                            💡 <strong>Special Offer:</strong> Use code <span className="font-bold text-[#B8860B]">GOFLIN777</span> to get 90% off! (₹999 → ₹99)
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 sm:p-3 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                            <span className="text-green-800 font-medium text-sm">₹900 discount applied!</span>
+                          </div>
+                          <Button
+                            onClick={resetCoupon}
+                            variant="ghost"
+                            size="sm"
+                            className="text-green-700 hover:bg-green-200 p-1"
+                          >
+                            <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                          </Button>
+                        </div>
+                        <div className="text-center py-2">
+                          <span className="text-xs sm:text-sm font-semibold text-green-700 bg-green-100 px-2 sm:px-3 py-1 rounded-full">
+                            🎉 You saved ₹900!
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Service Description */}
+            <Card className="border-[#B8860B]/20 bg-gradient-to-br from-[#301934]/5 to-[#A020F0]/5">
+              <CardContent className="p-3 sm:p-4">
+                <h3 className="font-semibold text-[#301934] mb-2 font-heading flex items-center gap-2 text-sm sm:text-base">
+                  📊 What You'll Receive
+                </h3>
+                <ul className="space-y-1 text-xs sm:text-sm text-[#301934]/80">
+                  <li>✅ 25+ page personalized numerology report</li>
+                  <li>✅ Life path analysis & predictions</li>
+                  <li>✅ Compatibility insights</li>
+                  <li>✅ Career & financial guidance</li>
+                  <li>✅ Delivered to WhatsApp within 24 hours</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1 border-[#B8860B]/30 text-[#301934] hover:bg-[#301934]/5 text-sm sm:text-base"
+                onClick={() => {
+                  setShowPaymentDialog(false);
+                  resetCoupon();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-[#B8860B] text-[#301934] hover:bg-[#B8860B]/90 font-semibold text-sm sm:text-base py-2"
+                onClick={handlePayment}
+                disabled={isProcessingPayment}
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-[#301934] mr-2"></div>
+                    <span className="text-xs sm:text-sm">Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    💳 Pay ₹{finalPrice} Now
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
