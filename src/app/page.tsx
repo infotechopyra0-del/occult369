@@ -1618,6 +1618,8 @@ export default function HomePage() {
                   <Link href="/privacy-policy" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm">Privacy Policy</Link>
                   <Link href="/terms-conditions" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Terms & Conditions</Link>
                   <Link href="/faq" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">FAQ</Link>
+                  <Link href="/returns" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Returns & Refunds</Link>
+                  <Link href="/shipping" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Shipping & Delivery</Link>
                 </div>
               </div>
             </div>
@@ -1691,7 +1693,7 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="text-center md:text-left">
                 <p className="font-paragraph text-[#F5F5DC]/60 text-sm">
-                  © 2025 Occult369. All rights reserved.
+                  © 2026 Occult369. All rights reserved.
                 </p>
                 <p className="font-paragraph text-[#F5F5DC]/40 text-xs mt-1">
                   Professional numerology and astrology services worldwide

@@ -420,11 +420,13 @@ export default function LearnMorePage() {
                 <li><Link href="/privacy-policy" className="hover:text-[#B8860B] transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/terms-conditions" className="hover:text-[#B8860B] transition-colors">Terms & Conditions</Link></li>
                 <li><Link href="/faq" className="hover:text-[#B8860B] transition-colors">FAQ</Link></li>
+                <Link href="/returns" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Returns & Refunds</Link>
+                <Link href="/shipping" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Shipping & Delivery</Link>
               </ul>
             </div>
           </div>
           <div className="border-t border-[#B8860B]/20 mt-8 pt-8 text-center text-[#F5F5DC]/60">
-            <p>&copy; 2025 Occult369. All rights reserved. | Discover Your Destiny Through Numbers</p>
+            <p>&copy; 2026 Occult369. All rights reserved. | Discover Your Destiny Through Numbers</p>
           </div>
         </div>
       </footer>

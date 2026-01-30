@@ -58,15 +58,6 @@ export default function RootLayout({
           <WhatsAppWidget />
           <Toaster position="top-right" richColors />
         </Providers>
-        <footer className="w-full bg-[#301934] border-t border-[#B8860B]/30 text-[#F5F5DC] py-6 px-4 mt-12">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm font-heading font-semibold tracking-wide">&copy; {new Date().getFullYear()} Occult369. All rights reserved.</div>
-            <div className="flex gap-6 text-sm font-medium">
-              <a href="/shipping" className="hover:text-[#B8860B] transition-colors">Shipping</a>
-              <a href="/returns" className="hover:text-[#B8860B] transition-colors">Returns</a>
-            </div>
-          </div>
-        </footer>
       </body>
     </html>
   );

@@ -275,6 +275,8 @@ export default function PrivacyPolicyPage() {
                 <Link href="/faq" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">FAQ</Link>
                 <Link href="/privacy-policy" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Privacy Policy</Link>
                 <Link href="/terms-conditions" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Terms & Conditions</Link>
+                <Link href="/returns" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Returns & Refunds</Link>
+                <Link href="/shipping" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Shipping & Delivery</Link>
               </div>
             </div>
             <div>
@@ -288,7 +290,7 @@ export default function PrivacyPolicyPage() {
           </div>
           <div className="border-t border-[#F5F5DC]/20 mt-12 pt-8 text-center">
             <p className="font-paragraph text-[#F5F5DC]/60">
-              © 2025 Occult369. All rights reserved. | Unlock your destiny through ancient wisdom.
+              © 2026 Occult369. All rights reserved. | Unlock your destiny through ancient wisdom.
             </p>
           </div>
         </div>

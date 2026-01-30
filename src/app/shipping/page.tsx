@@ -84,6 +84,52 @@ export default function ShippingPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer Spacer */}
+      <footer className="bg-[#301934] text-[#F5F5DC] py-8 sm:py-12 lg:py-16 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-2xl font-heading font-bold mb-4">Occult369</h3>
+              <p className="font-paragraph text-[#F5F5DC]/80">
+                Unlocking the mysteries of numerology and astrology for personal transformation.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-lg font-heading font-semibold mb-4">Quick Links</h4>
+              <div className="space-y-2">
+                <Link href="/" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Home</Link>
+                <Link href="/about" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">About</Link>
+                <Link href="/services" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Services</Link>
+                <Link href="/testimonials" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Testimonials</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-lg font-heading font-semibold mb-4">Legal</h4>
+              <div className="space-y-2">
+                <Link href="/faq" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">FAQ</Link>
+                <Link href="/privacy-policy" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Privacy Policy</Link>
+                <Link href="/terms-conditions" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Terms & Conditions</Link>
+                <Link href="/returns" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Returns & Refunds</Link>
+                                  <Link href="/shipping" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B] transition-colors duration-200 text-sm mt-2">Shipping & Delivery</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-lg font-heading font-semibold mb-4">Connect</h4>
+              <div className="space-y-2">
+                <Link href="/contact" className="block font-paragraph text-[#F5F5DC]/80 hover:text-[#B8860B]">Contact Us</Link>
+                <div className="font-paragraph text-[#F5F5DC]/80">WhatsApp: +91 6390 057 777</div>
+                <div className="font-paragraph text-[#F5F5DC]/80">Email: reports@occult369.com</div>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-[#F5F5DC]/20 mt-12 pt-8 text-center">
+            <p className="font-paragraph text-[#F5F5DC]/60">
+              © 2025 Occult369. All rights reserved. | Unlock your destiny through ancient wisdom.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
