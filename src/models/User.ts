@@ -63,7 +63,6 @@ const UserSchema: Schema = new Schema(
   }
 );
 
-// Hash password before saving
 UserSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   
@@ -75,12 +74,10 @@ UserSchema.pre('save', async function () {
   }
 });
 
-// Instance method to compare passwords
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Ensure the model is not re-compiled if it already exists
 const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User;

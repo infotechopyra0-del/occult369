@@ -25,7 +25,6 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/admin')) {
       // No token? Redirect to login
       if (!token) {
-        console.log('[Middleware] No token, redirecting to login');
         return NextResponse.redirect(new URL('/login', request.url));
       }
       

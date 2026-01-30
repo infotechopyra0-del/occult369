@@ -19,7 +19,6 @@ export default function TestimonialsPage() {
         const { items } = await BaseCrudService.getAll<Testimonials>('testimonials');
         setTestimonials(items);
       } catch (error) {
-        console.error('Error fetching testimonials:', error);
       } finally {
         setLoading(false);
       }

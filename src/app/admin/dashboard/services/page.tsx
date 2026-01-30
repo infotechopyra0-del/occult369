@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Search, 
-  Download, 
   Eye, 
   Edit, 
   Trash2,
@@ -19,7 +17,6 @@ import {
   Star,
   Sparkles,
   Package,
-  TrendingUp,
   CheckCircle,
   AlertCircle,
   Image as ImageIcon
@@ -93,7 +90,6 @@ export default function ServicesPage() {
           setServices([]);
         }
       } catch (error) {
-        console.error('Error fetching services:', error);
         setServices([]);
       } finally {
         setLoading(false);

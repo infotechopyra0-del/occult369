@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,14 +14,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { 
-  Search, 
   Trash2,
   CheckCircle, 
   Clock,
-  XCircle,
   AlertCircle,
   Mail,
   Phone,
@@ -31,9 +27,7 @@ import {
   Star,
   Sparkles,
   Users,
-  Filter,
-  MessageCircle,
-  Settings
+  MessageCircle
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { motion } from 'framer-motion';
@@ -57,9 +51,6 @@ export default function ContactsPage() {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterService, setFilterService] = useState<string>('all');
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -109,17 +100,6 @@ export default function ContactsPage() {
       toast.error('Failed to delete contact');
     }
   };
-
-  const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = (contact.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (contact.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (contact.phone || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (contact.message || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || contact.status === filterStatus;
-    const matchesService = filterService === 'all' || contact.service === filterService;
-    
-    return matchesSearch && matchesStatus && matchesService;
-  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -219,7 +199,7 @@ export default function ContactsPage() {
           <Card className="bg-white border-none shadow-md">
             <CardHeader>
               <CardTitle className="font-heading text-gray-800">
-                Contacts ({filteredContacts.length})
+                Contacts ({contacts.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -236,7 +216,39 @@ export default function ContactsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredContacts.map((contact, index) => (
+                    {loading ? (
+                      // Skeleton loading
+                      [...Array(3)].map((_, index) => (
+                        <tr key={index} className="border-b animate-pulse">
+                          <td className="p-4">
+                            <div className="space-y-2">
+                              <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                              <div className="w-48 h-3 bg-gray-200 rounded"></div>
+                              <div className="w-40 h-3 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="w-24 h-6 bg-gray-200 rounded-full"></div>
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              <div className="w-full h-3 bg-gray-200 rounded"></div>
+                              <div className="w-3/4 h-3 bg-gray-200 rounded"></div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="w-20 h-6 bg-gray-200 rounded-full"></div>
+                          </td>
+                          <td className="p-4">
+                            <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                          </td>
+                          <td className="p-4">
+                            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      contacts.map((contact, index) => (
                       <motion.tr
                         key={contact._id}
                         initial={{ opacity: 0, y: 10 }}
@@ -307,15 +319,16 @@ export default function ContactsPage() {
                           </div>
                         </td>
                       </motion.tr>
-                    ))}
+                    )))}
+
                   </tbody>
                 </table>
               </div>
               
-              {filteredContacts.length === 0 && (
+              {!loading && contacts.length === 0 && (
                 <div className="text-center py-12">
                   <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 font-sora">No contacts found matching your criteria</p>
+                  <p className="text-gray-500 font-sora">No contacts found</p>
                 </div>
               )}
             </CardContent>
