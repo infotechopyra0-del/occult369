@@ -125,7 +125,7 @@ export default function ShippingPage() {
           </div>
           <div className="border-t border-[#F5F5DC]/20 mt-12 pt-8 text-center">
             <p className="font-paragraph text-[#F5F5DC]/60">
-              © 2025 Occult369. All rights reserved. | Unlock your destiny through ancient wisdom.
+              © 2026 Occult369. All rights reserved. | Unlock your destiny through ancient wisdom.
             </p>
           </div>
         </div>
